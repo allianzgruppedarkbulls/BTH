@@ -1,4 +1,4 @@
-// js/pipes.js - Vollständiges, abgestimmtes Pipe-Modul
+// pipes.js - Vollständiges, abgestimmtes Pipe-Modul
 import { State } from './state.js';
 
 /**
@@ -192,4 +192,11 @@ export function generateParallelPipes(originalPipe, offsetMeters = 0.3) {
         points: newPoints,
         allowPointEdit: false
     };
+}
+
+/**
+ * Alias-Export für main.js
+ */
+export function getSnappedPoint(clickPt, existingPipes, snapRadius = 12) {
+    return getSnapPointOnPipes(clickPt, existingPipes, snapRadius);
 }
