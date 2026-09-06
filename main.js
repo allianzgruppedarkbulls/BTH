@@ -99,68 +99,6 @@ window.addEventListener('keyup', (e) => {
     if (e.code === 'Space') spacePressed = false;
 });
 
-canvas.addEventListener('mousedown', (e) => {
-    if (e.button !== 0 && e.button !== 1) return;
-    const rect = canvas.getBoundingClientRect();
-    let world = toWorld(e.clientX - rect.left, e.clientY - rect.top);
-
-    if (spacePressed || e.button === 1) {
-        isPanning = true; 
-        startPanX = e.clientX - offsetX; 
-        startPanY = e.clientY - offsetY;
-        return;
-    }
-
-    // Rohrleitung zeichnen
-    if (State.currentTool === 'draw-pipe') {
-        const snap = getSnappedPoint(world.x, world.y, 20 / scale);
-        const pt = { x: snap.x, y: snap.y };
-
-        pipePoints.push(pt);
-
-        if (pipePoints.length >= 2) {
-            const multiPipes = generateParallelPipes(pipePoints, activeParallelCount, 25);
-            State.objects.push(...multiPipes);
-            State.selectedObj = multiPipes[0];
-            pipePoints = [pt]; // Punkt behalten zum Weiterzeichnen
-            updateSidebar(State.selectedObj);
-        }
-        draw();
-        return;
-    }
-
-    // Auswahl & Punkte bewegen
-    if (State.currentTool === 'select') {
-        const handleRadius = 15 / scale;
-
-        if (State.selectedObj && State.selectedObj.type === 'pipe' && State.selectedObj.allowPointEdit) {
-            for (let i = 0; i < State.selectedObj.points.length; i++) {
-                if (Math.hypot(world.x - State.selectedObj.points[i].x, world.y - State.selectedObj.points[i].y) < handleRadius) {
-                    activeHandleIndex = i;
-                    return;
-                }
-            }
-        }
-
-        let foundObj = null;
-        for (let o of State.objects.slice().reverse()) {
-            if (o.type === 'pipe' && o.points) {
-                for (let i = 1; i < o.points.length; i++) {
-                    if (distToSegment(world, o.points[i - 1], o.points[i]) < 12 / scale) {
-                        foundObj = o;
-                        break;
-                    }
-                }
-            }
-            if (foundObj) break;
-        }
-
-        State.selectedObj = foundObj;
-        activeHandleIndex = -1;
-        updateSidebar(State.selectedObj);
-        draw();
-    }
-});
 // ==========================================
 // 1. Klicks auf dem Canvas (mousedown)
 // ==========================================
@@ -178,29 +116,21 @@ canvas.addEventListener('mousedown', (e) => {
 
     // --- ROHRLEITUNG ZEICHNEN ---
     if (State.currentTool === 'draw-pipe') {
-        // Snapping mit Radius durch Zoom ausgleichen
         const snap = getSnappedPoint(world.x, world.y, scale, 20);
         const pt = { x: snap.x, y: snap.y };
 
         pipePoints.push(pt);
 
-        // Erst wenn mindestens 2 Punkte existieren, wird ein Strang erzeugt
         if (pipePoints.length >= 2) {
-            // Falls bereits ein Objekt existiert, wird der Punkt angehängt (Polyline)
             if (State.selectedObj && State.selectedObj.type === 'pipe' && State.selectedObj.isDrawing) {
                 State.selectedObj.points.push(pt);
             } else {
-                // Erstellt die finale Leitungsstruktur
                 const multiPipes = generateParallelPipes(pipePoints, activeParallelCount, 25);
-                
-                // Markierung fürs Weiterzeichnen
                 multiPipes[0].isDrawing = true; 
-                
                 State.objects.push(...multiPipes);
                 State.selectedObj = multiPipes[0];
             }
 
-            // Der neue Punkt wird zum Startpunkt für das nächste Liniensegment
             pipePoints = [pt]; 
             updateSidebar(State.selectedObj);
         }
@@ -234,7 +164,6 @@ canvas.addEventListener('mousedown', (e) => {
             if (foundObj) break;
         }
 
-        // Zeichnen-Modus des alten Objekts aufheben
         if (State.selectedObj && State.selectedObj.type === 'pipe') {
             delete State.selectedObj.isDrawing;
         }
@@ -246,7 +175,9 @@ canvas.addEventListener('mousedown', (e) => {
     }
 });
 
-
+// ==========================================
+// 2. Mausbewegung (mousemove) & Mouseup
+// ==========================================
 canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     let world = toWorld(e.clientX - rect.left, e.clientY - rect.top);
@@ -258,7 +189,6 @@ canvas.addEventListener('mousemove', (e) => {
         return;
     }
 
-    // Knotenpunkt ziehen + Magnet-Einrasten an Fremdpunkten
     if (activeHandleIndex !== -1 && State.selectedObj && State.selectedObj.points && State.selectedObj.allowPointEdit) {
         const snap = getSnappedPoint(world.x, world.y, scale, 20);
         State.selectedObj.points[activeHandleIndex] = { x: snap.x, y: snap.y };
@@ -267,7 +197,6 @@ canvas.addEventListener('mousemove', (e) => {
         return;
     }
 
-    // Mauskoordinate für Vorschau-Linie snappen
     if (State.currentTool === 'draw-pipe' && pipePoints.length > 0) {
         const snap = getSnappedPoint(world.x, world.y, scale, 20);
         currentMouseWorld = { x: snap.x, y: snap.y };
@@ -278,6 +207,10 @@ canvas.addEventListener('mousemove', (e) => {
     draw();
 });
 
+canvas.addEventListener('mouseup', () => {
+    isPanning = false;
+    activeHandleIndex = -1;
+});
 
 function distToSegment(p, v, w) {
     const l2 = Math.hypot(v.x - w.x, v.y - w.y) ** 2;
@@ -287,6 +220,9 @@ function distToSegment(p, v, w) {
     return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
 }
 
+// ==========================================
+// 3. Render-Loop
+// ==========================================
 window.draw = function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
