@@ -164,3 +164,40 @@ export function getSnapPointOnPipes(clickPt, existingPipes, snapRadius = 12) {
 
     return bestSnap || clickPt;
 }
+
+/**
+ * Generiert eine parallele Versatz-Leitung (Parallel-Offset)
+ */
+export function generateParallelPipes(originalPipe, offsetMeters = 0.3) {
+    if (!originalPipe || !originalPipe.points || originalPipe.points.length < 2) return null;
+    
+    // Pixel-Abstand berechnen (Standard 0.3m Versatz)
+    const scale = (State && State.scale) ? State.scale : 20.0;
+    const offsetPx = offsetMeters * scale; 
+
+    const newPoints = originalPipe.points.map((pt, i, arr) => {
+        if (i === 0) {
+            const next = arr[1];
+            const dx = next.x - pt.x;
+            const dy = next.y - pt.y;
+            const len = Math.hypot(dx, dy) || 1;
+            return { x: pt.x - (dy / len) * offsetPx, y: pt.y + (dx / len) * offsetPx };
+        }
+        const prev = arr[i - 1];
+        const dx = pt.x - prev.x;
+        const dy = pt.y - prev.y;
+        const len = Math.hypot(dx, dy) || 1;
+        return { x: pt.x - (dy / len) * offsetPx, y: pt.y + (dx / len) * offsetPx };
+    });
+
+    return {
+        id: 'pipe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        type: 'pipe',
+        label: (originalPipe.label || 'Rohr') + ' (Parallel)',
+        valveZone: originalPipe.valveZone || 'v1',
+        color: originalPipe.color || '#3b82f6',
+        diameter: originalPipe.diameter || 25,
+        points: newPoints,
+        allowPointEdit: false
+    };
+}
