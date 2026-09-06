@@ -1,4 +1,4 @@
-// main.js - Event-Handling, Voreinstellung Parallelen & Nachträgliches Verbinden
+// main.js - Vollstabiler Zoom, Event-Handling & geschützte Strangverarbeitung
 import { State } from './state.js';
 import { updateSidebar } from './sidebar.js';
 import { drawLawn, calculatePolygonArea } from './lawn.js';
@@ -10,10 +10,12 @@ const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
 const container = document.getElementById('canvas-container');
 
-let width = container.clientWidth;
-let height = container.clientHeight;
-canvas.width = width; 
-canvas.height = height;
+function resizeCanvas() {
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+    draw();
+}
+window.addEventListener('resize', resizeCanvas);
 
 let scale = 1.0, offsetX = 0, offsetY = 0;
 let isPanning = false, startPanX = 0, startPanY = 0, spacePressed = false;
@@ -65,6 +67,23 @@ window.deselectCurrent = function() {
     draw();
 };
 
+// ABSOLUT STABILER ZOOM (Funktioniert immer)
+container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    offsetX = mouseX - (mouseX - offsetX) * zoomFactor;
+    offsetY = mouseY - (mouseY - offsetY) * zoomFactor;
+    scale *= zoomFactor;
+
+    const zoomEl = document.getElementById('val-zoom');
+    if (zoomEl) zoomEl.innerText = `${Math.round(scale * 100)}%`;
+    draw();
+}, { passive: false });
+
 function setTool(tool) {
     State.currentTool = tool;
     polygonPoints = [];
@@ -99,17 +118,30 @@ bindBtn('btn-add-source', 'add-source');
 bindBtn('btn-add-sprinkler', 'add-sprinkler');
 bindBtn('btn-draw-pipe', 'draw-pipe');
 
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') spacePressed = true;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); window.undo(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); window.redo(); }
+    if (e.key === 'Escape') { pipePoints = []; polygonPoints = []; window.deselectCurrent(); }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') spacePressed = false;
+});
+
 canvas.addEventListener('mousedown', (e) => {
     if (e.button !== 0 && e.button !== 1) return;
     const rect = canvas.getBoundingClientRect();
     let world = toWorld(e.clientX - rect.left, e.clientY - rect.top);
 
     if (spacePressed || e.button === 1) {
-        isPanning = true; startPanX = e.clientX - offsetX; startPanY = e.clientY - offsetY;
+        isPanning = true; 
+        startPanX = e.clientX - offsetX; 
+        startPanY = e.clientY - offsetY;
         return;
     }
 
-    // Rohrleitung zeichnen mit Einrastfunktion
+    // Rohrleitung zeichnen
     if (State.currentTool === 'draw-pipe') {
         const snap = getSnappedPoint(world.x, world.y, 20 / scale);
         const pt = { x: snap.x, y: snap.y };
@@ -121,8 +153,6 @@ canvas.addEventListener('mousedown', (e) => {
             const multiPipes = generateParallelPipes(pipePoints, activeParallelCount, 25);
             State.objects.push(...multiPipes);
             State.selectedObj = multiPipes[0];
-            
-            // Punkt für nahtlose Weiterverlegung behalten
             pipePoints = [pt];
             updateSidebar(State.selectedObj);
         }
@@ -130,11 +160,12 @@ canvas.addEventListener('mousedown', (e) => {
         return;
     }
 
-    // Bearbeiten / Punkte verschieben
+    // Auswahl & Geschütztes Dragging
     if (State.currentTool === 'select') {
         const handleRadius = 15 / scale;
 
-        if (State.selectedObj && State.selectedObj.points && !State.selectedObj.locked) {
+        // Verschieben von Punkten NUR erlaubt, wenn allowPointEdit === true
+        if (State.selectedObj && State.selectedObj.type === 'pipe' && State.selectedObj.allowPointEdit) {
             for (let i = 0; i < State.selectedObj.points.length; i++) {
                 if (Math.hypot(world.x - State.selectedObj.points[i].x, world.y - State.selectedObj.points[i].y) < handleRadius) {
                     pushState();
@@ -175,8 +206,7 @@ canvas.addEventListener('mousemove', (e) => {
         return;
     }
 
-    // Dragging mit automatischem Snap/Verbinden an andere Rohre
-    if (activeHandleIndex !== -1 && State.selectedObj && State.selectedObj.points) {
+    if (activeHandleIndex !== -1 && State.selectedObj && State.selectedObj.points && State.selectedObj.allowPointEdit) {
         const snap = getSnappedPoint(world.x, world.y, 15 / scale);
         State.selectedObj.points[activeHandleIndex] = { x: snap.x, y: snap.y };
         updateSidebar(State.selectedObj);
@@ -232,6 +262,7 @@ window.draw = function() {
 };
 
 window.onload = () => {
+    resizeCanvas();
     updateSidebar(null);
     window.draw();
 };
