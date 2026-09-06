@@ -8,7 +8,7 @@ export function createPipe(points, diameter = 25, label = 'Hauptstrang', color =
         type: 'pipe',
         label: label,
         points: [...points],          // Durchgehender Schlauch / Polyline
-        nodesData: {},                // Bauteil-Daten pro Knoten: { index: { type: 'tapping_saddle', thread: '3/4', outlet: 16 } }
+        nodesData: {},                // Bauteil-Daten pro Knoten
         diameter: Number(diameter),
         assignedZone: 'Sektor 1',
         flowRateLh: 1200,
@@ -17,7 +17,7 @@ export function createPipe(points, diameter = 25, label = 'Hauptstrang', color =
     };
 }
 
-// Snapping-Funktion für Knotenpunkte
+// Snapping-Funktion für Knotenpunkte (Behebt den Uncaught SyntaxError)
 export function getSnappedPoint(cursorX, cursorY, snapRadius = 15) {
     let snapped = { x: cursorX, y: cursorY, isSnapped: false };
     const allObjects = State.objects || [];
@@ -35,7 +35,6 @@ export function getSnappedPoint(cursorX, cursorY, snapRadius = 15) {
     return snapped;
 }
 
-
 export function drawPipe(ctx, obj, scale, isSelected) {
     if (!obj.points || obj.points.length < 2) return;
 
@@ -48,7 +47,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
 
     ctx.save();
     
-    // 1. Durchgehender Strang (Ein einziges Element)
+    // 1. Durchgehender Strang
     ctx.beginPath();
     ctx.moveTo(obj.points[0].x, obj.points[0].y);
     for (let i = 1; i < obj.points.length; i++) {
@@ -61,9 +60,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
     ctx.lineJoin = 'round';
     ctx.stroke();
 
-    // 2. Gesamt-Längenlabel & Segmentmessung
-    const pxm = State.pixelsPerMeter || 20;
-
+    // 2. Zwischenpunkt-Biegehandles (für Modus Bearbeiten)
     for (let i = 1; i < obj.points.length; i++) {
         const p1 = obj.points[i - 1];
         const p2 = obj.points[i];
@@ -71,7 +68,6 @@ export function drawPipe(ctx, obj, scale, isSelected) {
         const midY = (p1.y + p2.y) / 2;
 
         if (isSelected) {
-            // Zwischenpunkt-Biegehandle
             ctx.beginPath();
             ctx.arc(midX, midY, 4 / scale, 0, Math.PI * 2);
             ctx.fillStyle = '#94a3b8';
@@ -82,7 +78,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
         }
     }
 
-    // 3. Knotenpunkte & optische Bauteile (Anbohrschelle / T-Stücke / Ventile)
+    // 3. Knotenpunkte & Bauteile (Anbohrschellen, Ventile, Handles)
     if (!obj.nodesData) obj.nodesData = {};
 
     obj.points.forEach((p, index) => {
@@ -92,22 +88,20 @@ export function drawPipe(ctx, obj, scale, isSelected) {
         ctx.translate(p.x, p.y);
 
         if (node && node.type === 'tapping_saddle') {
-            // Optische Darstellung: Anbohrschelle auf dem Schlauch
+            // Optische Darstellung: Anbohrschelle
             ctx.fillStyle = '#1e293b';
             ctx.strokeStyle = '#f59e0b';
             ctx.lineWidth = 2 / scale;
             
-            // Schellen-Körper (Sattel)
             ctx.fillRect(-6 / scale, -6 / scale, 12 / scale, 12 / scale);
             ctx.strokeRect(-6 / scale, -6 / scale, 12 / scale, 12 / scale);
 
-            // Gewinde-Abgang (z.B. 3/4" Stutzen)
+            // Gewinde-Abgang
             ctx.beginPath();
             ctx.arc(0, 0, 3 / scale, 0, Math.PI * 2);
             ctx.fillStyle = '#38bdf8';
             ctx.fill();
 
-            // Label im Modus
             ctx.fillStyle = '#ffffff';
             ctx.font = `bold ${8 / scale}px sans-serif`;
             ctx.textAlign = 'center';
@@ -124,7 +118,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
             ctx.stroke();
 
         } else {
-            // Normaler Verbindungsknoten
+            // Normaler Knoten
             const isEnd = index === 0 || index === obj.points.length - 1;
             ctx.beginPath();
             ctx.arc(0, 0, (isEnd ? 6 : 4) / scale, 0, Math.PI * 2);
@@ -141,7 +135,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
     ctx.restore();
 }
 
-// Knoten-Eigenschaften über Sidebar oder Klick konfigurieren
+// Knoten-Eigenschaften setzen
 export function setNodeComponent(pipeObj, nodeIndex, componentType, threadSize = '3/4', flexOutletMm = 16) {
     if (!pipeObj.nodesData) pipeObj.nodesData = {};
 
@@ -149,16 +143,23 @@ export function setNodeComponent(pipeObj, nodeIndex, componentType, threadSize =
         delete pipeObj.nodesData[nodeIndex];
     } else {
         pipeObj.nodesData[nodeIndex] = {
-            type: componentType, // 'tapping_saddle', 'tee', 'valve'
+            type: componentType, // 'tapping_saddle', 'valve'
             mainPipeDiameter: pipeObj.diameter,
             thread: threadSize,  // '1/2"', '3/4"'
-            outletMm: flexOutletMm // z.B. 16mm Flexschlauch
+            outletMm: flexOutletMm // z.B. 16mm Flex
         };
     }
     if (typeof draw === 'function') draw();
 }
 
-// Punkt aus dem durchgehenden Strang löschen (ohne Trennung)
+export function attachSaddleToSelectedNode(type = 'tapping_saddle') {
+    if (State.selectedObj && State.selectedObj.type === 'pipe') {
+        const lastIdx = State.selectedObj.points.length - 1;
+        setNodeComponent(State.selectedObj, lastIdx, type, '3/4"', 16);
+    }
+}
+
+// Punkt aus dem Strang entfernen (ohne Trennung)
 export function removePointFromPipe(pipeObj, index) {
     if (pipeObj.points.length > 2) {
         pipeObj.points.splice(index, 1);
@@ -174,7 +175,6 @@ export function getPipeSidebarHTML(obj) {
     const currentDiameter = Number(obj.diameter) || 25;
     const orderLength = Math.ceil(hyd.length * 1.10);
 
-    // Zählen der verbauten Anbohrschellen
     let saddleCount = 0;
     if (obj.nodesData) {
         Object.values(obj.nodesData).forEach(n => {
@@ -212,7 +212,7 @@ export function getPipeSidebarHTML(obj) {
                 </div>
             </div>
 
-            <!-- Ausgewählter Knotenpunkt / Bauteil zuweisen -->
+            <!-- Bauteil zuweisen -->
             <div style="border-top:1px solid #334155; padding-top:10px;">
                 <h4 style="margin:0 0 8px 0; color:#e2e8f0; font-size:12px;">📍 Knotenpunkt-Bauteil setzen</h4>
                 <p style="font-size:10px; color:#94a3b8; margin-bottom:8px;">Klicke auf einen Punkt des Rohrs, um Bauteile zu montieren:</p>
@@ -258,4 +258,5 @@ if (typeof window !== 'undefined') {
     window.updatePipeProp = updatePipeProp;
     window.setNodeComponent = setNodeComponent;
     window.removePointFromPipe = removePointFromPipe;
+    window.attachSaddleToSelectedNode = attachSaddleToSelectedNode;
 }
