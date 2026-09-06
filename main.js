@@ -7,11 +7,13 @@ const ctx = canvas.getContext('2d');
 const container = document.getElementById('canvas-container');
 
 let currentMouseWorld = { x: 0, y: 0 };
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
 
 function resize() {
     if (!container || !canvas) return;
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
+    canvas.width = container.clientWidth || window.innerWidth;
+    canvas.height = container.clientHeight || window.innerHeight;
     render();
 }
 window.addEventListener('resize', resize);
@@ -50,18 +52,23 @@ export function render() {
     ctx.restore();
 }
 
-// Canvas Klick-Handling
 canvas.addEventListener('mousedown', (e) => {
-    if (e.button === 1 || e.shiftKey) return; // Für Pan reserviert
-
     const rect = canvas.getBoundingClientRect();
+    
+    // Pan mit mittlerer Maustaste oder Shift
+    if (e.button === 1 || e.shiftKey) {
+        isPanning = true;
+        panStart = { x: e.clientX - State.offsetX, y: e.clientY - State.offsetY };
+        return;
+    }
+
+    // Normaler Klick für Werkzeuge
     const worldPt = toWorld(e.clientX - rect.left, e.clientY - rect.top);
 
     if (State.activeTool === 'scale') {
         handleScaleClick(worldPt);
     }
 });
-
 // Canvas Mausbewegung
 canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
