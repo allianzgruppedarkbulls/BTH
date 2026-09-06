@@ -2,6 +2,31 @@
 import { State } from './state.js';
 import { calculatePipeLength } from './pipes.js';
 
+// ==========================================
+// GLOBALE HILFSFUNKTIONEN FÜR DIE SIDEBAR
+// ==========================================
+
+window.updateSystemMeta = (key, value) => {
+    if (!State.systemMeta) State.systemMeta = {};
+    State.systemMeta[key] = value;
+    if (typeof window.draw === 'function') window.draw();
+};
+
+window.updatePipeProp = (key, value) => {
+    if (State.selectedObj && State.selectedObj.type === 'pipe') {
+        State.selectedObj[key] = value;
+        if (typeof window.draw === 'function') window.draw();
+    }
+};
+
+window.togglePipeLock = () => {
+    if (State.selectedObj && State.selectedObj.type === 'pipe') {
+        State.selectedObj.allowPointEdit = !State.selectedObj.allowPointEdit;
+        updateSidebar(State.selectedObj);
+        if (typeof window.draw === 'function') window.draw();
+    }
+};
+
 export function updateSidebar(obj) {
     let sidebar = document.getElementById('sidebar-content') || document.getElementById('sidebar') || document.querySelector('.sidebar');
     if (!sidebar) return;
@@ -10,8 +35,6 @@ export function updateSidebar(obj) {
     // Filter und Zuordnungen
     const pipes = State.objects.filter(o => o.type === 'pipe');
     const sprinklers = State.objects.filter(o => o.type === 'sprinkler');
-    const dripZones = State.objects.filter(o => o.type === 'drip');
-    const lawns = State.objects.filter(o => o.type === 'lawn');
 
     // Dynamische Liste aller Elemente für das Hauptfenster
     let allElementsHTML = '';
@@ -52,13 +75,13 @@ export function updateSidebar(obj) {
                 <div style="background:#1e293b; padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid #334155;">
                     <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:3px;">Wasserquelle / Einspeisung:</label>
                     <select onchange="window.updateSystemMeta('pumpType', this.value)" style="width:100%; padding:5px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; font-size:11px; margin-bottom:8px;">
-                        <option value="pumpe_3m3" ${State.systemMeta.pumpType==='pumpe_3m3'?'selected':''}>Tiefbrunnenpumpe (3,0 m³/h)</option>
-                        <option value="pumpe_5m3" ${State.systemMeta.pumpType==='pumpe_5m3'?'selected':''}>Zisternenpumpe (5,0 m³/h)</option>
-                        <option value="hausanschluss" ${State.systemMeta.pumpType==='hausanschluss'?'selected':''}>Hauswasseranschluss (DN20)</option>
+                        <option value="pumpe_3m3" ${State.systemMeta?.pumpType==='pumpe_3m3'?'selected':''}>Tiefbrunnenpumpe (3,0 m³/h)</option>
+                        <option value="pumpe_5m3" ${State.systemMeta?.pumpType==='pumpe_5m3'?'selected':''}>Zisternenpumpe (5,0 m³/h)</option>
+                        <option value="hausanschluss" ${State.systemMeta?.pumpType==='hausanschluss'?'selected':''}>Hauswasseranschluss (DN20)</option>
                     </select>
 
                     <label style="display:flex; align-items:center; font-size:11px; cursor:pointer; color:#e2e8f0;">
-                        <input type="checkbox" ${State.systemMeta.hasCistern ? 'checked' : ''} onchange="window.updateSystemMeta('hasCistern', this.checked)" style="margin-right:6px;">
+                        <input type="checkbox" ${State.systemMeta?.hasCistern ? 'checked' : ''} onchange="window.updateSystemMeta('hasCistern', this.checked)" style="margin-right:6px;">
                         Zisterne vorgeschaltet
                     </label>
                 </div>
@@ -119,7 +142,7 @@ export function updateSidebar(obj) {
     }
 }
 
-// ARBEITSZETTEL-GENERATOR (Erstellt aufgeteilte Zettel für die Monteure)
+// ARBEITSZETTEL-GENERATOR
 window.generateWorksheets = () => {
     const pipes = State.objects.filter(o => o.type === 'pipe');
     const sprinklers = State.objects.filter(o => o.type === 'sprinkler');
@@ -128,18 +151,16 @@ window.generateWorksheets = () => {
     report += " 🏗️ MONTAGE- & ARBEITSZETTEL-BEWÄSSERUNG\n";
     report += "==========================================\n\n";
 
-    // ZETTEL 0: Vor der Ventilbox
     const mainPipes = pipes.filter(p => p.valveZone === 'main');
     let mainMeters = mainPipes.reduce((acc, p) => acc + calculatePipeLength(p.points), 0);
     
     report += "------------------------------------------\n";
     report += "📄 ARBEITSZETTEL 0: ZULEITUNG & VENTILBOX\n";
     report += "------------------------------------------\n";
-    report += `• Einspeisung: ${State.systemMeta.pumpType || 'Standard-Pumpe'}\n`;
+    report += `• Einspeisung: ${State.systemMeta?.pumpType || 'Standard-Pumpe'}\n`;
     report += `• Zuleitung bis Box: ${mainMeters.toFixed(2)} m PE-Rohr\n`;
     report += `• Hauptkomponenten: Filter, Druckminderer, Verteiler\n\n`;
 
-    // ZETTEL FOR JEDES VENTIL (1 bis 4)
     ['v1', 'v2', 'v3', 'v4'].forEach((vKey, idx) => {
         const zonePipes = pipes.filter(p => p.valveZone === vKey || (!p.valveZone && vKey === 'v1'));
         const zoneMeters = zonePipes.reduce((acc, p) => acc + calculatePipeLength(p.points), 0);
@@ -155,7 +176,6 @@ window.generateWorksheets = () => {
         }
     });
 
-    // In neuem Fenster/Tab als Druckansicht ausgeben
     const win = window.open("", "_blank");
     win.document.write(`<pre style="font-family:monospace; font-size:13px; background:#1e293b; color:#f8fafc; padding:20px;">${report}</pre>`);
 };
