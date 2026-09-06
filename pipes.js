@@ -15,9 +15,10 @@ export function createPipe(points, diameter = 25, label = 'Hauptstrang', color =
     };
 }
 
-export function getSnappedPoint(cursorX, cursorY, snapRadiusPx = 15) {
+export function getSnappedPoint(cursorX, cursorY, scale = 1, snapRadiusPx = 20) {
     let bestPoint = { x: cursorX, y: cursorY, isSnapped: false };
-    let minDist = snapRadiusPx;
+    // Wandelt den Pixel-Radius dynamisch anhand des aktuellen Zooms um
+    let minDist = snapRadiusPx / scale; 
 
     const allObjects = State.objects || [];
     for (const obj of allObjects) {
