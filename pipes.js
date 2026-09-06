@@ -1,9 +1,7 @@
 // js/pipes.js - Vollständiges Pipe-System mit stabiler Abzweigung
 import { State } from './state.js';
 
-/**
- * Zeichnet eine einzelne Pipe auf dem Canvas
- */
+
 export function drawPipe(ctx, pipe) {
     if (!pipe.points || pipe.points.length < 2) return;
 
