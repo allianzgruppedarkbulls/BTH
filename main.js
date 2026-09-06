@@ -1,11 +1,13 @@
-// js/main.js - Clean Modular Entry Point
+// js/main.js - Clean Modular Entry Point (mit Phase 1 Integration)
 import { State } from './state.js';
+import { handleImageUpload, handleScaleClick, drawScaleTool } from './scale.js';
 
 const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
 const container = document.getElementById('canvas-container');
 
-// Canvas an Fenstergröße anpassen
+let currentMouseWorld = { x: 0, y: 0 };
+
 function resize() {
     if (!container || !canvas) return;
     canvas.width = container.clientWidth;
@@ -14,7 +16,6 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// Welt-Koordinaten Umrechnung
 function toWorld(sX, sY) {
     return {
         x: (sX - State.offsetX) / State.scale,
@@ -22,11 +23,9 @@ function toWorld(sX, sY) {
     };
 }
 
-// Globaler Tool-Wechsler
 window.setTool = function(toolName) {
     State.activeTool = toolName;
     State.selectedObj = null;
-    console.log("Aktives Tool:", toolName);
     render();
 };
 
@@ -35,7 +34,6 @@ export function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     
-    // Zoom & Verschiebung anwenden
     ctx.translate(State.offsetX, State.offsetY);
     ctx.scale(State.scale, State.scale);
 
@@ -44,30 +42,46 @@ export function render() {
         ctx.drawImage(State.bgImage, 0, 0);
     }
 
-    // 2. Alle Objekte zeichnen
-    State.objects.forEach(obj => {
-        // Hier binden wir später Schritt für Schritt die Renderer ein
-    });
+    // 2. Maßstabs-Werkzeug zeichnen (falls aktiv)
+    if (State.activeTool === 'scale') {
+        drawScaleTool(ctx, currentMouseWorld);
+    }
 
     ctx.restore();
 }
 
-// Zoom & Pan Handler
-let isPanning = false, panStart = { x: 0, y: 0 };
-
+// Canvas Klick-Handling
 canvas.addEventListener('mousedown', (e) => {
-    if (e.button === 1 || e.shiftKey) { // Mittlere Maustaste oder Shift+Klick = Pan
-        isPanning = true;
-        panStart = { x: e.clientX - State.offsetX, y: e.clientY - State.offsetY };
-        return;
+    if (e.button === 1 || e.shiftKey) return; // Für Pan reserviert
+
+    const rect = canvas.getBoundingClientRect();
+    const worldPt = toWorld(e.clientX - rect.left, e.clientY - rect.top);
+
+    if (State.activeTool === 'scale') {
+        handleScaleClick(worldPt);
     }
 });
 
+// Canvas Mausbewegung
 canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    currentMouseWorld = toWorld(e.clientX - rect.left, e.clientY - rect.top);
+
     if (isPanning) {
         State.offsetX = e.clientX - panStart.x;
         State.offsetY = e.clientY - panStart.y;
-        render();
+    }
+    
+    render();
+});
+
+// Zoom & Pan
+let isPanning = false, panStart = { x: 0, y: 0 };
+
+canvas.addEventListener('mousedown', (e) => {
+    if (e.button === 1 || e.shiftKey) {
+        isPanning = true;
+        panStart = { x: e.clientX - State.offsetX, y: e.clientY - State.offsetY };
     }
 });
 
@@ -85,6 +99,13 @@ canvas.addEventListener('wheel', (e) => {
     State.scale *= zoomFactor;
     render();
 }, { passive: false });
+
+// File-Upload Event Listener automatisch verdrahten
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.type === 'file') {
+        handleImageUpload(e.target.files[0]);
+    }
+});
 
 window.onload = () => {
     resize();
