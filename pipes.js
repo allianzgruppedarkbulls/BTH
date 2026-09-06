@@ -17,6 +17,25 @@ export function createPipe(points, diameter = 25, label = 'Hauptstrang', color =
     };
 }
 
+// Snapping-Funktion für Knotenpunkte
+export function getSnappedPoint(cursorX, cursorY, snapRadius = 15) {
+    let snapped = { x: cursorX, y: cursorY, isSnapped: false };
+    const allObjects = State.objects || [];
+
+    for (const obj of allObjects) {
+        if (obj.points) {
+            for (const p of obj.points) {
+                const dist = Math.hypot(p.x - cursorX, p.y - cursorY);
+                if (dist < snapRadius) {
+                    return { x: p.x, y: p.y, isSnapped: true };
+                }
+            }
+        }
+    }
+    return snapped;
+}
+
+
 export function drawPipe(ctx, obj, scale, isSelected) {
     if (!obj.points || obj.points.length < 2) return;
 
