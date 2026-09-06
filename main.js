@@ -33,8 +33,12 @@ function toWorld(sX, sY) {
 }
 
 window.deselectCurrent = function() {
+    if (State.selectedObj && State.selectedObj.type === 'pipe') {
+        delete State.selectedObj.isDrawing;
+    }
     State.selectedObj = null;
     activeHandleIndex = -1;
+    pipePoints = [];
     updateSidebar(null);
     draw();
 };
@@ -92,7 +96,9 @@ bindBtn('btn-draw-pipe', 'draw-pipe');
 
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') spacePressed = true;
-    if (e.key === 'Escape') { pipePoints = []; window.deselectCurrent(); }
+    if (e.key === 'Escape') { 
+        window.deselectCurrent(); 
+    }
 });
 
 window.addEventListener('keyup', (e) => {
@@ -121,19 +127,18 @@ canvas.addEventListener('mousedown', (e) => {
 
         pipePoints.push(pt);
 
-        if (pipePoints.length >= 2) {
-            if (State.selectedObj && State.selectedObj.type === 'pipe' && State.selectedObj.isDrawing) {
-                State.selectedObj.points.push(pt);
-            } else {
-                const multiPipes = generateParallelPipes(pipePoints, activeParallelCount, 25);
-                multiPipes[0].isDrawing = true; 
+        if (pipePoints.length === 2) {
+            const multiPipes = generateParallelPipes(pipePoints, activeParallelCount, 25);
+            if (multiPipes.length > 0) {
+                multiPipes[0].isDrawing = true;
                 State.objects.push(...multiPipes);
                 State.selectedObj = multiPipes[0];
             }
-
-            pipePoints = [pt]; 
-            updateSidebar(State.selectedObj);
+        } else if (pipePoints.length > 2 && State.selectedObj && State.selectedObj.type === 'pipe') {
+            State.selectedObj.points.push(pt);
         }
+
+        updateSidebar(State.selectedObj);
         draw();
         return;
     }
@@ -190,7 +195,7 @@ canvas.addEventListener('mousemove', (e) => {
     }
 
     if (activeHandleIndex !== -1 && State.selectedObj && State.selectedObj.points && State.selectedObj.allowPointEdit) {
-        const snap = getSnappedPoint(world.x, world.y, scale, 20);
+        const snap = getSnappedPoint(world.x, world.y, scale, 20, State.selectedObj);
         State.selectedObj.points[activeHandleIndex] = { x: snap.x, y: snap.y };
         updateSidebar(State.selectedObj);
         draw();
