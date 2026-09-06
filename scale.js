@@ -5,7 +5,7 @@ import { render } from './main.js';
 let scalePoints = [];
 
 /**
- * Handhabt den Bild-Upload
+ * Handhabt den Bild-Upload & passt das Bild an den Canvas an
  */
 export function handleImageUpload(file) {
     if (!file) return;
@@ -14,6 +14,21 @@ export function handleImageUpload(file) {
         const img = new Image();
         img.onload = () => {
             State.bgImage = img;
+
+            // --- NEU: Bild automatisch zentrieren & auf Canvas einpassen ---
+            const canvas = document.getElementById('mainCanvas');
+            if (canvas) {
+                const scaleX = canvas.width / img.width;
+                const scaleY = canvas.height / img.height;
+                State.scale = Math.min(scaleX, scaleY) * 0.9; // 90% des Canvas füllen
+
+                State.offsetX = (canvas.width - img.width * State.scale) / 2;
+                State.offsetY = (canvas.height - img.height * State.scale) / 2;
+            }
+
+            // Stufe 2 UI freischalten (Maßstab-Button aktivieren)
+            if (window.updateStepUI) window.updateStepUI(2);
+
             render();
         };
         img.src = event.target.result;
@@ -39,6 +54,9 @@ export function handleScaleClick(worldPt) {
             State.pixelsPerMeter = distPx / meters;
             console.log(`Neuer Maßstab: ${State.pixelsPerMeter.toFixed(2)} px/m`);
             alert(`Maßstab erfolgreich gesetzt: ${State.pixelsPerMeter.toFixed(2)} Pixel = 1 Meter`);
+            
+            // Stufe 3 UI freischalten (Rasen & weitere Tools freischalten)
+            if (window.updateStepUI) window.updateStepUI(3);
         }
 
         scalePoints = [];
