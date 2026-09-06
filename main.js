@@ -1,4 +1,4 @@
-// js/main.js - Clean Modular Entry Point (mit Phase 1 Integration)
+// js/main.js - Hauptsteuerung
 import { State } from './state.js';
 import { handleImageUpload, handleScaleClick, drawScaleTool } from './scale.js';
 
@@ -44,7 +44,7 @@ export function render() {
         ctx.drawImage(State.bgImage, 0, 0);
     }
 
-    // 2. Maßstabs-Werkzeug zeichnen (falls aktiv)
+    // 2. Maßstabs-Werkzeug zeichnen
     if (State.activeTool === 'scale') {
         drawScaleTool(ctx, currentMouseWorld);
     }
@@ -52,9 +52,10 @@ export function render() {
     ctx.restore();
 }
 
+// Canvas Klick- & Pan-Handling
 canvas.addEventListener('mousedown', (e) => {
     const rect = canvas.getBoundingClientRect();
-    
+
     // Pan mit mittlerer Maustaste oder Shift
     if (e.button === 1 || e.shiftKey) {
         isPanning = true;
@@ -62,14 +63,13 @@ canvas.addEventListener('mousedown', (e) => {
         return;
     }
 
-    // Normaler Klick für Werkzeuge
+    // Werkzeuge
     const worldPt = toWorld(e.clientX - rect.left, e.clientY - rect.top);
-
     if (State.activeTool === 'scale') {
         handleScaleClick(worldPt);
     }
 });
-// Canvas Mausbewegung
+
 canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     currentMouseWorld = toWorld(e.clientX - rect.left, e.clientY - rect.top);
@@ -82,17 +82,9 @@ canvas.addEventListener('mousemove', (e) => {
     render();
 });
 
-// Zoom & Pan
-let isPanning = false, panStart = { x: 0, y: 0 };
-
-canvas.addEventListener('mousedown', (e) => {
-    if (e.button === 1 || e.shiftKey) {
-        isPanning = true;
-        panStart = { x: e.clientX - State.offsetX, y: e.clientY - State.offsetY };
-    }
+canvas.addEventListener('mouseup', () => { 
+    isPanning = false; 
 });
-
-canvas.addEventListener('mouseup', () => { isPanning = false; });
 
 canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -107,7 +99,7 @@ canvas.addEventListener('wheel', (e) => {
     render();
 }, { passive: false });
 
-// File-Upload Event Listener automatisch verdrahten
+// File-Upload Listener
 document.addEventListener('change', (e) => {
     if (e.target && e.target.type === 'file') {
         handleImageUpload(e.target.files[0]);
