@@ -1,4 +1,4 @@
-// main.js - Wiederhergestellte Kernfunktionalität & Event-Loop
+// main.js - Reparierter Event-Loop & abgestimmte Pipes-Anbindung
 import { State } from './state.js';
 import { updateSidebar } from './sidebar.js';
 import { drawLawn } from './lawn.js';
@@ -74,25 +74,29 @@ function setTool(tool) {
         }
     }
 
-    document.querySelectorAll('#toolbar button').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById(`btn-${tool}`);
-    if (btn) btn.classList.add('active');
+    document.querySelectorAll('.sidebar button, .sidebar .btn, #toolbar button').forEach(b => b.classList.remove('active'));
     draw();
 }
 
-const bindBtn = (id, toolName) => {
-    const btn = document.getElementById(id);
-    if (btn) btn.onclick = () => setTool(toolName);
-};
+// Sichere Zuordnung der Sidebar-Buttons über Text & IDs
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button, .btn');
+    if (!btn) return;
 
-bindBtn('btn-select', 'select');
-bindBtn('btn-scale', 'scale');
-bindBtn('btn-draw-lawn', 'draw-lawn');
-bindBtn('btn-draw-drip', 'draw-drip');
-bindBtn('btn-draw-deadzone', 'draw-deadzone');
-bindBtn('btn-add-source', 'add-source');
-bindBtn('btn-add-sprinkler', 'add-sprinkler');
-bindBtn('btn-draw-pipe', 'draw-pipe');
+    const txt = btn.innerText ? btn.innerText.toLowerCase() : '';
+    const id = btn.id || '';
+
+    if (id === 'btn-draw-pipe' || txt.includes('rohrleitung')) setTool('draw-pipe');
+    else if (id === 'btn-draw-lawn' || txt.includes('rasen')) setTool('draw-lawn');
+    else if (id === 'btn-draw-drip' || txt.includes('tropfzone')) setTool('draw-drip');
+    else if (id === 'btn-draw-deadzone' || txt.includes('totzone')) setTool('draw-deadzone');
+    else if (id === 'btn-scale' || txt.includes('maßstab')) setTool('scale');
+    else if (id === 'btn-add-sprinkler' || txt.includes('regner')) setTool('add-sprinkler');
+    else if (id === 'btn-add-source' || txt.includes('wasserquelle')) setTool('add-source');
+    else if (id === 'btn-select' || txt.includes('bearbeiten')) setTool('select');
+    
+    btn.classList.add('active');
+});
 
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') spacePressed = true;
@@ -122,17 +126,31 @@ canvas.addEventListener('mousedown', (e) => {
 
     // --- ROHRLEITUNG ZEICHNEN ---
     if (State.currentTool === 'draw-pipe') {
-        const snap = getSnappedPoint(world.x, world.y, scale, 20);
+        const existingPipes = (State.objects || []).filter(o => o.type === 'pipe');
+        const snap = getSnappedPoint(world, existingPipes, 20 / scale);
         const pt = { x: snap.x, y: snap.y };
 
         pipePoints.push(pt);
 
         if (pipePoints.length === 2) {
-            const multiPipes = generateParallelPipes(pipePoints, activeParallelCount, 25);
-            if (multiPipes.length > 0) {
-                multiPipes[0].isDrawing = true;
-                State.objects.push(...multiPipes);
-                State.selectedObj = multiPipes[0];
+            // Einzelne Pipe oder Parallele erzeugen
+            const basePipe = {
+                id: 'pipe_' + Date.now(),
+                type: 'pipe',
+                valveZone: 'v1',
+                points: [...pipePoints],
+                allowPointEdit: false
+            };
+            
+            State.objects.push(basePipe);
+            State.selectedObj = basePipe;
+            
+            // Wenn Mehrfachleitung gewählt wurde
+            if (activeParallelCount > 1) {
+                for (let i = 1; i < activeParallelCount; i++) {
+                    const pPipe = generateParallelPipes(basePipe, 0.3 * i);
+                    if (pPipe) State.objects.push(pPipe);
+                }
             }
         } else if (pipePoints.length > 2 && State.selectedObj && State.selectedObj.type === 'pipe') {
             State.selectedObj.points.push(pt);
@@ -195,7 +213,8 @@ canvas.addEventListener('mousemove', (e) => {
     }
 
     if (activeHandleIndex !== -1 && State.selectedObj && State.selectedObj.points && State.selectedObj.allowPointEdit) {
-        const snap = getSnappedPoint(world.x, world.y, scale, 20, State.selectedObj);
+        const existingPipes = (State.objects || []).filter(o => o.type === 'pipe' && o !== State.selectedObj);
+        const snap = getSnappedPoint(world, existingPipes, 20 / scale);
         State.selectedObj.points[activeHandleIndex] = { x: snap.x, y: snap.y };
         updateSidebar(State.selectedObj);
         draw();
@@ -203,7 +222,8 @@ canvas.addEventListener('mousemove', (e) => {
     }
 
     if (State.currentTool === 'draw-pipe' && pipePoints.length > 0) {
-        const snap = getSnappedPoint(world.x, world.y, scale, 20);
+        const existingPipes = (State.objects || []).filter(o => o.type === 'pipe');
+        const snap = getSnappedPoint(world, existingPipes, 20 / scale);
         currentMouseWorld = { x: snap.x, y: snap.y };
     } else {
         currentMouseWorld = world;
@@ -236,13 +256,15 @@ window.draw = function() {
 
     if (State.backgroundImg) ctx.drawImage(State.backgroundImg, 0, 0);
 
-    State.objects.forEach(obj => {
-        const isSelected = (obj === State.selectedObj);
-        if (obj.type === 'lawn' || obj.type === 'deadzone') drawLawn(ctx, obj, scale, State.pixelsPerMeter, isSelected);
-        else if (obj.type === 'drip') drawDripZone(ctx, obj, scale, State.pixelsPerMeter, isSelected);
-        else if (obj.type === 'sprinkler') drawSprinkler(ctx, obj, scale, State.pixelsPerMeter, isSelected);
-        else if (obj.type === 'pipe') drawPipe(ctx, obj, scale, isSelected);
-    });
+    if (Array.isArray(State.objects)) {
+        State.objects.forEach(obj => {
+            const isSelected = (obj === State.selectedObj);
+            if (obj.type === 'lawn' || obj.type === 'deadzone') drawLawn(ctx, obj, scale, State.pixelsPerMeter, isSelected);
+            else if (obj.type === 'drip') drawDripZone(ctx, obj, scale, State.pixelsPerMeter, isSelected);
+            else if (obj.type === 'sprinkler') drawSprinkler(ctx, obj, scale, State.pixelsPerMeter, isSelected);
+            else if (obj.type === 'pipe') drawPipe(ctx, obj, scale, isSelected);
+        });
+    }
 
     if (State.currentTool === 'draw-pipe' && pipePoints.length > 0 && currentMouseWorld) {
         ctx.beginPath();
