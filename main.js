@@ -1,16 +1,19 @@
-// main.js - Vollstabiler Zoom, Event-Handling & geschützte Strangverarbeitung
+// main.js - Wiederhergestellte Kernfunktionalität & Event-Loop
 import { State } from './state.js';
 import { updateSidebar } from './sidebar.js';
-import { drawLawn, calculatePolygonArea } from './lawn.js';
+import { drawLawn } from './lawn.js';
 import { drawPipe, getSnappedPoint, generateParallelPipes } from './pipes.js';
 import { drawSprinkler } from './sprinklers.js';
 import { drawDripZone } from './drip-renderer.js';
+
+window.updateSidebar = updateSidebar;
 
 const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
 const container = document.getElementById('canvas-container');
 
 function resizeCanvas() {
+    if (!container || !canvas) return;
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
     draw();
@@ -20,41 +23,10 @@ window.addEventListener('resize', resizeCanvas);
 let scale = 1.0, offsetX = 0, offsetY = 0;
 let isPanning = false, startPanX = 0, startPanY = 0, spacePressed = false;
 
-let polygonPoints = [];
 let pipePoints = [];
 let currentMouseWorld = null;
 let activeHandleIndex = -1;
-let scaleStartPoint = null;
 let activeParallelCount = 1;
-
-const undoStack = [];
-const redoStack = [];
-
-function pushState() {
-    undoStack.push(JSON.stringify(State.objects));
-    if (undoStack.length > 30) undoStack.shift();
-    redoStack.length = 0;
-}
-
-window.undo = function() {
-    if (undoStack.length > 0) {
-        redoStack.push(JSON.stringify(State.objects));
-        State.objects = JSON.parse(undoStack.pop());
-        State.selectedObj = null;
-        updateSidebar(null);
-        draw();
-    }
-};
-
-window.redo = function() {
-    if (redoStack.length > 0) {
-        undoStack.push(JSON.stringify(State.objects));
-        State.objects = JSON.parse(redoStack.pop());
-        State.selectedObj = null;
-        updateSidebar(null);
-        draw();
-    }
-};
 
 function toWorld(sX, sY) {
     return { x: (sX - offsetX) / scale, y: (sY - offsetY) / scale };
@@ -67,28 +39,28 @@ window.deselectCurrent = function() {
     draw();
 };
 
-// ABSOLUT STABILER ZOOM (Funktioniert immer)
-container.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    const rect = container.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+// Zoom über Mausrad
+if (container) {
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+        const rect = container.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
 
-    offsetX = mouseX - (mouseX - offsetX) * zoomFactor;
-    offsetY = mouseY - (mouseY - offsetY) * zoomFactor;
-    scale *= zoomFactor;
+        offsetX = mouseX - (mouseX - offsetX) * zoomFactor;
+        offsetY = mouseY - (mouseY - offsetY) * zoomFactor;
+        scale *= zoomFactor;
 
-    const zoomEl = document.getElementById('val-zoom');
-    if (zoomEl) zoomEl.innerText = `${Math.round(scale * 100)}%`;
-    draw();
-}, { passive: false });
+        const zoomEl = document.getElementById('val-zoom');
+        if (zoomEl) zoomEl.innerText = `${Math.round(scale * 100)}%`;
+        draw();
+    }, { passive: false });
+}
 
 function setTool(tool) {
     State.currentTool = tool;
-    polygonPoints = [];
     pipePoints = [];
-    scaleStartPoint = null;
     activeHandleIndex = -1;
 
     if (tool === 'draw-pipe') {
@@ -120,9 +92,7 @@ bindBtn('btn-draw-pipe', 'draw-pipe');
 
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') spacePressed = true;
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); window.undo(); }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); window.redo(); }
-    if (e.key === 'Escape') { pipePoints = []; polygonPoints = []; window.deselectCurrent(); }
+    if (e.key === 'Escape') { pipePoints = []; window.deselectCurrent(); }
 });
 
 window.addEventListener('keyup', (e) => {
@@ -149,26 +119,23 @@ canvas.addEventListener('mousedown', (e) => {
         pipePoints.push(pt);
 
         if (pipePoints.length >= 2) {
-            pushState();
             const multiPipes = generateParallelPipes(pipePoints, activeParallelCount, 25);
             State.objects.push(...multiPipes);
             State.selectedObj = multiPipes[0];
-            pipePoints = [pt];
+            pipePoints = [pt]; // Punkt behalten zum Weiterzeichnen
             updateSidebar(State.selectedObj);
         }
         draw();
         return;
     }
 
-    // Auswahl & Geschütztes Dragging
+    // Auswahl & Punkte bewegen
     if (State.currentTool === 'select') {
         const handleRadius = 15 / scale;
 
-        // Verschieben von Punkten NUR erlaubt, wenn allowPointEdit === true
         if (State.selectedObj && State.selectedObj.type === 'pipe' && State.selectedObj.allowPointEdit) {
             for (let i = 0; i < State.selectedObj.points.length; i++) {
                 if (Math.hypot(world.x - State.selectedObj.points[i].x, world.y - State.selectedObj.points[i].y) < handleRadius) {
-                    pushState();
                     activeHandleIndex = i;
                     return;
                 }
@@ -232,7 +199,7 @@ function distToSegment(p, v, w) {
 }
 
 window.draw = function() {
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.translate(offsetX, offsetY);
     ctx.scale(scale, scale);
