@@ -2,9 +2,6 @@
 import { State } from './state.js';
 import { calculatePipeLength } from './pipes.js';
 
-// ==========================================
-// GLOBALE HILFSFUNKTIONEN FÜR DIE SIDEBAR
-// ==========================================
 
 window.updateSystemMeta = (key, value) => {
     if (!State.systemMeta) State.systemMeta = {};
