@@ -1,135 +1,168 @@
-// js/pipes.js - Hydraulik, robuster Magnet-Snapper & Parallel-Pipeline-Generierung
+// js/pipes.js - Vollständiges Pipe-System mit stabiler Abzweigung
 import { State } from './state.js';
 
-const PIPE_COLORS = ['#38bdf8', '#f59e0b', '#10b981', '#a855f7', '#ec4899', '#ef4444'];
+/**
+ * Zeichnet eine einzelne Pipe auf dem Canvas
+ */
+export function drawPipe(ctx, pipe) {
+    if (!pipe.points || pipe.points.length < 2) return;
 
-export function createPipe(points, diameter = 25, label = 'Hauptstrang', color = null) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(pipe.points[0].x, pipe.points[0].y);
+
+    for (let i = 1; i < pipe.points.length; i++) {
+        ctx.lineTo(pipe.points[i].x, pipe.points[i].y);
+    }
+
+    const isSelected = (State.selectedObj === pipe);
+    
+    // Priorität: Eigene Custom-Farbe > Zonen-Farbe > Standard Blau
+    ctx.strokeStyle = isSelected ? '#38bdf8' : (pipe.color || getZoneColor(pipe.valveZone));
+    ctx.lineWidth = isSelected ? 5 : (pipe.diameter ? Math.max(2, pipe.diameter / 8) : 3);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Punkte hervorheben, wenn selektiert oder im Bearbeitungsmodus
+    if (isSelected || pipe.allowPointEdit) {
+        pipe.points.forEach((pt, idx) => {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, isSelected ? 5 : 3, 0, Math.PI * 2);
+            ctx.fillStyle = idx === 0 ? '#10b981' : (idx === pipe.points.length - 1 ? '#ef4444' : '#f59e0b');
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        });
+    }
+
+    ctx.restore();
+}
+
+/**
+ * Liefert die Farbe basierend auf der Ventilzone
+ */
+export function getZoneColor(zone) {
+    const colors = {
+        'main': '#ef4444', // Rot (Vor Ventilbox / Hauptleitung)
+        'v1': '#3b82f6',   // Blau (Ventil 1)
+        'v2': '#10b981',   // Grün (Ventil 2)
+        'v3': '#f59e0b',   // Gelb (Ventil 3)
+        'v4': '#8b5cf6'    // Violett (Ventil 4)
+    };
+    return colors[zone] || '#3b82f6';
+}
+
+/**
+ * Berechnet die einzelnen Teilsegmente eines Strangs in Metern (Punkt zu Punkt)
+ */
+export function getPipeSegments(points) {
+    if (!points || points.length < 2) return [];
+    const scale = State.scale || 0.05; // Pixel zu Meter Umrechnung
+    const segments = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+        const dx = points[i+1].x - points[i].x;
+        const dy = points[i+1].y - points[i].y;
+        const distPx = Math.sqrt(dx * dx + dy * dy);
+        segments.push(parseFloat((distPx * scale).toFixed(2)));
+    }
+    return segments;
+}
+
+/**
+ * Berechnet die Gesamtlänge einer Pipe in Metern
+ */
+export function calculatePipeLength(points) {
+    const segments = getPipeSegments(points);
+    return parseFloat(segments.reduce((a, b) => a + b, 0).toFixed(2));
+}
+
+/**
+ * Prüft, ob ein Klick in der Nähe einer Pipe war (für Selektion)
+ */
+export function isPointNearPipe(pt, pipe, maxDist = 10) {
+    if (!pipe.points || pipe.points.length < 2) return false;
+
+    for (let i = 0; i < pipe.points.length - 1; i++) {
+        const p1 = pipe.points[i];
+        const p2 = pipe.points[i + 1];
+        const dist = distToSegment(pt, p1, p2);
+        if (dist <= maxDist) return true;
+    }
+    return false;
+}
+
+/**
+ * Hilfsfunktion: Abstand Punkt zu Liniensegment
+ */
+function distToSegment(p, v, w) {
+    const l2 = (v.x - w.x) ** 2 + (v.y - w.y) ** 2;
+    if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+    let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+}
+
+/**
+ * Erstellt ein neues, sauberes Pipe-Objekt
+ */
+export function createPipe(startPoint, zone = 'v1', diameter = 25) {
     return {
-        id: `pipe_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        id: 'pipe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         type: 'pipe',
-        label: label,
-        points: JSON.parse(JSON.stringify(points)),
-        diameter: Number(diameter),
-        customColor: color || PIPE_COLORS[0],
-        valveZone: 'v1',
+        label: '',
+        valveZone: zone,
+        color: getZoneColor(zone),
+        diameter: diameter,
+        points: [startPoint],
         allowPointEdit: false
     };
 }
 
 /**
- * MAGNET-SNAPPING (Absolut absturzsicher)
+ * Binds/Snaps einen Punkt an eine bestehende Pipe (für Abzweigungen)
+ * ohne die Ursprungs-Pipe zu überschreiben.
  */
-export function getSnappedPoint(cursorX, cursorY, scale = 1, snapRadiusPx = 25, ignoreObj = null) {
-    let bestPoint = { x: cursorX, y: cursorY, isSnapped: false };
-    let minDist = snapRadiusPx / Math.max(scale, 0.1);
+export function getSnapPointOnPipes(clickPt, existingPipes, snapRadius = 12) {
+    let bestSnap = null;
+    let minDistance = snapRadius;
 
-    const allObjects = State.objects || [];
-    for (const obj of allObjects) {
-        if (obj.type === 'pipe' && Array.isArray(obj.points) && obj !== ignoreObj) {
-            for (const p of obj.points) {
-                const dist = Math.hypot(p.x - cursorX, p.y - cursorY);
-                if (dist < minDist) {
-                    minDist = dist;
-                    bestPoint = { x: p.x, y: p.y, isSnapped: true };
+    existingPipes.forEach(pipe => {
+        if (!pipe.points) return;
+        
+        // 1. Prüfe Snap auf bestehende Punkte (T-Stück / Ecken)
+        pipe.points.forEach(pt => {
+            const d = Math.hypot(clickPt.x - pt.x, clickPt.y - pt.y);
+            if (d < minDistance) {
+                minDistance = d;
+                bestSnap = { x: pt.x, y: pt.y, snappedToPoint: true, targetPipe: pipe };
+            }
+        });
+
+        // 2. Prüfe Snap auf die Linie (Abzweig mitten auf der Strecke)
+        if (!bestSnap) {
+            for (let i = 0; i < pipe.points.length - 1; i++) {
+                const p1 = pipe.points[i];
+                const p2 = pipe.points[i + 1];
+                const d = distToSegment(clickPt, p1, p2);
+                if (d < minDistance) {
+                    minDistance = d;
+                    // Projiziere Punkt exakt auf die Linie
+                    const l2 = (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2;
+                    let t = ((clickPt.x - p1.x) * (p2.x - p1.x) + (clickPt.y - p1.y) * (p2.y - p1.y)) / l2;
+                    t = Math.max(0, Math.min(1, t));
+                    bestSnap = {
+                        x: p1.x + t * (p2.x - p1.x),
+                        y: p1.y + t * (p2.y - p1.y),
+                        snappedToSegment: true,
+                        targetPipe: pipe
+                    };
                 }
             }
         }
-    }
-    return bestPoint;
-}
-
-/**
- * Generiert parallele Rohrstränge
- */
-export function generateParallelPipes(basePoints, count = 1, offsetPx = 25) {
-    const resultPipes = [];
-    if (!basePoints || basePoints.length < 2) return resultPipes;
-
-    for (let i = 0; i < count; i++) {
-        const pipePoints = basePoints.map(p => ({ x: p.x + (i * offsetPx), y: p.y + (i * offsetPx) }));
-        const newPipe = createPipe(pipePoints, 25, count > 1 ? `Parallel-Strang #${i + 1}` : 'Hauptstrang', PIPE_COLORS[i % PIPE_COLORS.length]);
-        resultPipes.push(newPipe);
-    }
-    return resultPipes;
-}
-
-/**
- * Berechnet die Meter-Länge
- */
-export function calculatePipeLength(points) {
-    if (!points || points.length < 2) return 0;
-    let totalPx = 0;
-    for (let i = 1; i < points.length; i++) {
-        totalPx += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
-    }
-    const pxm = State.pixelsPerMeter || 20;
-    return Math.round((totalPx / pxm) * 100) / 100;
-}
-
-export function checkIsClosedLoop(points) {
-    if (!points || points.length < 3) return false;
-    const start = points[0];
-    const end = points[points.length - 1];
-    return Math.hypot(start.x - end.x, start.y - end.y) < 1.0;
-}
-
-/**
- * Zeichnet das Rohr auf dem Canvas
- */
-export function drawPipe(ctx, obj, scale, isSelected) {
-    if (!obj.points || obj.points.length < 2) return;
-
-    const pxm = State.pixelsPerMeter || 20;
-    const drawColor = obj.customColor || (isSelected ? '#f59e0b' : '#38bdf8');
-    const isLoop = checkIsClosedLoop(obj.points);
-
-    ctx.save();
-    
-    // 1. Rohrtrasse
-    ctx.beginPath();
-    ctx.moveTo(obj.points[0].x, obj.points[0].y);
-    for (let i = 1; i < obj.points.length; i++) {
-        ctx.lineTo(obj.points[i].x, obj.points[i].y);
-    }
-
-    ctx.strokeStyle = drawColor;
-    ctx.lineWidth = (isSelected ? 5 : 3.5) / scale;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-
-    // 2. Segment-Längen
-    for (let i = 1; i < obj.points.length; i++) {
-        const p1 = obj.points[i - 1];
-        const p2 = obj.points[i];
-        const segDistPx = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-        const segMeters = (segDistPx / pxm).toFixed(2);
-
-        const midX = (p1.x + p2.x) / 2;
-        const midY = (p1.y + p2.y) / 2;
-
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.fillRect(midX - (18 / scale), midY - (8 / scale), 36 / scale, 16 / scale);
-        
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = `bold ${10 / scale}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${segMeters}m`, midX, midY);
-    }
-
-    // 3. Knotenpunkte
-    obj.points.forEach((p, index) => {
-        const isEnd = index === 0 || index === obj.points.length - 1;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, (isEnd ? 5.5 : 3.5) / scale, 0, Math.PI * 2);
-        
-        ctx.fillStyle = isLoop ? '#10b981' : ((isSelected && obj.allowPointEdit) ? '#ef4444' : drawColor);
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5 / scale;
-        ctx.fill();
-        ctx.stroke();
     });
 
-    ctx.restore();
+    return bestSnap || clickPt;
 }
