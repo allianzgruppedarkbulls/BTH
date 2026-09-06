@@ -1,8 +1,8 @@
-// main.js - CAD Hauptsteuerung & Event-Handling
+// main.js - CAD Hauptsteuerung, Undo/Redo & Parallel-Stränge
 import { State } from './state.js';
 import { updateSidebar } from './sidebar.js';
 import { drawLawn, calculatePolygonArea } from './lawn.js';
-import { drawPipe, getSnappedPoint, getPipeSidebarHTML } from './pipes.js';
+import { drawPipe, getSnappedPoint, generateParallelPipes } from './pipes.js';
 import { drawSprinkler } from './sprinklers.js';
 import { drawDripZone } from './drip-renderer.js';
 
@@ -17,25 +17,46 @@ canvas.height = height;
 
 let scale = 1.0, offsetX = 0, offsetY = 0;
 let isPanning = false, startPanX = 0, startPanY = 0, spacePressed = false;
+
 let polygonPoints = [];
 let pipePoints = [];
 let currentMouseWorld = null;
 let activeHandleIndex = -1;
 let scaleStartPoint = null;
 
-function toWorld(sX, sY) {
-    return { x: (sX - offsetX) / scale, y: (sY - offsetY) / scale };
+// Undo / Redo Speicher
+const undoStack = [];
+const redoStack = [];
+
+function pushState() {
+    undoStack.push(JSON.stringify(State.objects));
+    if (undoStack.length > 30) undoStack.shift();
+    redoStack.length = 0;
 }
 
-// Globale Fenster-Funktionen für HTML/Sidebar-Event-Handler
-window.selectObjectByIndex = function(index) {
-    if (State.objects[index]) {
-        State.selectedObj = State.objects[index];
-        activeHandleIndex = -1;
-        updateSidebar(State.selectedObj);
+window.undo = function() {
+    if (undoStack.length > 0) {
+        redoStack.push(JSON.stringify(State.objects));
+        State.objects = JSON.parse(undoStack.pop());
+        State.selectedObj = null;
+        updateSidebar(null);
         draw();
     }
 };
+
+window.redo = function() {
+    if (redoStack.length > 0) {
+        undoStack.push(JSON.stringify(State.objects));
+        State.objects = JSON.parse(redoStack.pop());
+        State.selectedObj = null;
+        updateSidebar(null);
+        draw();
+    }
+};
+
+function toWorld(sX, sY) {
+    return { x: (sX - offsetX) / scale, y: (sY - offsetY) / scale };
+}
 
 window.deselectCurrent = function() {
     State.selectedObj = null;
@@ -44,50 +65,21 @@ window.deselectCurrent = function() {
     draw();
 };
 
-window.toggleLockSelected = function() {
-    if (State.selectedObj) {
-        State.selectedObj.locked = !State.selectedObj.locked;
-        updateSidebar(State.selectedObj);
-        draw();
-    }
-};
-
-window.updateSystemMeta = function(prop, val) {
-    State.systemMeta[prop] = val;
-    updateSidebar(State.selectedObj);
-    draw();
-};
-
-window.updateSprinklerProp = function(prop, val) {
-    if (State.selectedObj && State.selectedObj.type === 'sprinkler') {
-        State.selectedObj[prop] = val;
-        updateSidebar(State.selectedObj);
-        draw();
-    }
-};
-
-window.changeDripLayoutMode = function(mode) {
-    if (State.selectedObj && State.selectedObj.type === 'drip') {
-        State.selectedObj.layoutMode = mode;
-        draw();
-    }
-};
-
-window.changeDripDistance = function(dist) {
-    if (State.selectedObj && State.selectedObj.type === 'drip') {
-        State.selectedObj.dripDistance = parseFloat(dist);
-        draw();
-    }
-};
-
-// Event-Listener Tastatur
+// Tastatur-Shortcuts für Undo / Redo / Abbrechen
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') spacePressed = true;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        window.undo();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        window.redo();
+    }
     if (e.key === 'Escape') {
-        window.deselectCurrent();
-        polygonPoints = [];
         pipePoints = [];
-        draw();
+        polygonPoints = [];
+        window.deselectCurrent();
     }
 });
 
@@ -109,29 +101,6 @@ container.addEventListener('wheel', (e) => {
     draw();
 });
 
-// Hintergrundbild Upload
-document.getElementById('img-upload')?.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-            State.backgroundImg = img;
-            const scaleX = (width * 0.8) / img.width;
-            const scaleY = (height * 0.8) / img.height;
-            scale = Math.min(scaleX, scaleY);
-            offsetX = (width - img.width * scale) / 2;
-            offsetY = (height - img.height * scale) / 2;
-            setTool('scale');
-            draw();
-        };
-        img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-});
-
-// Werkzeug-Auswahl
 function setTool(tool) {
     State.currentTool = tool;
     polygonPoints = [];
@@ -162,28 +131,14 @@ const deleteBtn = document.getElementById('btn-delete');
 if (deleteBtn) {
     deleteBtn.onclick = () => {
         if (State.selectedObj) {
+            pushState();
             State.objects = State.objects.filter(o => o !== State.selectedObj);
             window.deselectCurrent();
         }
     };
 }
 
-// Maßstab aktualisieren
-function updatePixelsPerMeter(newPxM) {
-    State.pixelsPerMeter = newPxM;
-    const pxmEl = document.getElementById('val-px-m');
-    if (pxmEl) pxmEl.innerText = `${State.pixelsPerMeter.toFixed(1)} px/m`;
-    
-    State.objects.forEach(obj => {
-        if ((obj.type === 'lawn' || obj.type === 'drip' || obj.type === 'deadzone') && obj.points) {
-            obj.areaM2 = calculatePolygonArea(obj.points, State.pixelsPerMeter);
-        }
-    });
-    updateSidebar(State.selectedObj);
-    draw();
-}
-
-// Maus-Events auf Canvas
+// Maus-Klick auf Canvas
 canvas.addEventListener('mousedown', (e) => {
     if (e.button !== 0 && e.button !== 1) return;
     const rect = canvas.getBoundingClientRect();
@@ -196,7 +151,7 @@ canvas.addEventListener('mousedown', (e) => {
         return;
     }
 
-    // 1. Maßstab-Tool
+    // 1. Maßstab
     if (State.currentTool === 'scale') {
         if (!scaleStartPoint) {
             scaleStartPoint = world;
@@ -204,7 +159,9 @@ canvas.addEventListener('mousedown', (e) => {
             const distPx = Math.hypot(world.x - scaleStartPoint.x, world.y - scaleStartPoint.y);
             const inputMeters = prompt("Strecke in Metern:", "5");
             if (inputMeters && !isNaN(parseFloat(inputMeters)) && parseFloat(inputMeters) > 0) {
-                updatePixelsPerMeter(distPx / parseFloat(inputMeters));
+                State.pixelsPerMeter = distPx / parseFloat(inputMeters);
+                const pxmEl = document.getElementById('val-px-m');
+                if (pxmEl) pxmEl.innerText = `${State.pixelsPerMeter.toFixed(1)} px/m`;
             }
             scaleStartPoint = null;
             setTool('select');
@@ -213,20 +170,38 @@ canvas.addEventListener('mousedown', (e) => {
         return;
     }
 
-    // 2. Flächen zeichnen (Lawn, Drip, Deadzone)
+    // 2. Rohrleitung zeichnen (mit Live-Vorschau & Multistrang)
+    if (State.currentTool === 'draw-pipe') {
+        const snapped = getSnappedPoint(world.x, world.y, 15 / scale);
+        const pt = { x: snapped.x, y: snapped.y };
+
+        pipePoints.push(pt);
+
+        if (pipePoints.length >= 2) {
+            pushState();
+            const parallelCount = parseInt(prompt("Wie viele parallele Leitungen sollen verlegt werden?", "1")) || 1;
+            
+            if (parallelCount > 1) {
+                const multiPipes = generateParallelPipes(pipePoints, parallelCount, 12 / scale, 25);
+                State.objects.push(...multiPipes);
+                State.selectedObj = multiPipes[0];
+            } else {
+                const multiPipes = generateParallelPipes(pipePoints, 1, 0, 25);
+                State.objects.push(multiPipes[0]);
+                State.selectedObj = multiPipes[0];
+            }
+
+            pipePoints = [];
+            updateSidebar(State.selectedObj);
+            setTool('select');
+        }
+        draw();
+        return;
+    }
+
+    // 3. Flächen zeichnen
     if (State.currentTool === 'draw-lawn' || State.currentTool === 'draw-drip' || State.currentTool === 'draw-deadzone') {
         const snapRadius = 15 / scale;
-        for (let obj of State.objects) {
-            if (obj.points) {
-                for (let pt of obj.points) {
-                    if (Math.hypot(world.x - pt.x, world.y - pt.y) < snapRadius) {
-                        world = { x: pt.x, y: pt.y };
-                        break;
-                    }
-                }
-            }
-        }
-
         if (polygonPoints.length > 2 && Math.hypot(world.x - polygonPoints[0].x, world.y - polygonPoints[0].y) < snapRadius) {
             finishPolygon();
             return;
@@ -236,83 +211,21 @@ canvas.addEventListener('mousedown', (e) => {
         return;
     }
 
-    // 3. Bauteile setzen (Wasserquelle, Regner)
-    if (State.currentTool === 'add-source' || State.currentTool === 'add-sprinkler') {
-        const newObj = {
-            type: State.currentTool === 'add-source' ? 'source' : 'sprinkler',
-            x: world.x,
-            y: world.y,
-            name: State.currentTool === 'add-source' ? 'Hauptanschluss' : 'Regner 1',
-            radius: 5,
-            rate: 540,
-            locked: false
-        };
-        State.objects.push(newObj);
-        State.selectedObj = newObj;
-        updateSidebar(State.selectedObj);
-        setTool('select');
-        draw();
-        return;
-    }
-
-    // 4. Rohrleitungen verlegen (mit Magnet-Snap)
-    if (State.currentTool === 'draw-pipe') {
-        const snapped = getSnappedPoint(world.x, world.y, 15 / scale);
-        const pt = { x: snapped.x, y: snapped.y };
-
-        pipePoints.push(pt);
-        if (pipePoints.length >= 2) {
-            const newPipe = {
-                type: 'pipe',
-                points: [...pipePoints],
-                diameter: 25,
-                label: 'Hauptleitung',
-                assignedZone: 'Sektor 1',
-                locked: false
-            };
-            State.objects.push(newPipe);
-            pipePoints = [pt]; // Ende ist Startpunkt für das nächste Segment
-        }
-        draw();
-        return;
-    }
-
-    // 5. Auswahl & Verschieben
+    // 4. Auswahl & Verschieben
     if (State.currentTool === 'select') {
         const handleRadius = 12 / scale;
 
-        // A) Hauptknotenpunkte des ausgewählten Objekts prüfen
         if (State.selectedObj && State.selectedObj.points && !State.selectedObj.locked) {
             for (let i = 0; i < State.selectedObj.points.length; i++) {
                 if (Math.hypot(world.x - State.selectedObj.points[i].x, world.y - State.selectedObj.points[i].y) < handleRadius) {
+                    pushState();
                     activeHandleIndex = i;
                     return;
                 }
             }
-
-            // B) Biegbare Zwischenpunkte (Mittelpunkte) bei Rohren prüfen
-            if (State.selectedObj.type === 'pipe') {
-                for (let i = 1; i < State.selectedObj.points.length; i++) {
-                    const p1 = State.selectedObj.points[i - 1];
-                    const p2 = State.selectedObj.points[i];
-                    const midX = (p1.x + p2.x) / 2;
-                    const midY = (p1.y + p2.y) / 2;
-
-                    if (Math.hypot(world.x - midX, world.y - midY) < handleRadius) {
-                        // Neuen Punkt mitten in der Segmentleiste einfügen & greifen
-                        State.selectedObj.points.splice(i, 0, { x: world.x, y: world.y });
-                        activeHandleIndex = i;
-                        draw();
-                        return;
-                    }
-                }
-            }
         }
 
-        // C) Neues Objekt anklicken
         let foundObj = null;
-        
-        // Erst Rohre prüfen (Abstand zur Line Segment)
         for (let o of State.objects.slice().reverse()) {
             if (o.type === 'pipe' && o.points) {
                 for (let i = 1; i < o.points.length; i++) {
@@ -325,7 +238,6 @@ canvas.addEventListener('mousedown', (e) => {
             if (foundObj) break;
         }
 
-        // Sonst sonstige Objekte prüfen (Sprinkler, Quellen, Flächen)
         if (!foundObj) {
             foundObj = State.objects.slice().reverse().find(o => (o.type === 'source' || o.type === 'sprinkler') ? Math.hypot(world.x - o.x, world.y - o.y) < 15 / scale : false) ||
                        State.objects.slice().reverse().find(o => o.points && isPointInPolygon(world, o.points)) || null;
@@ -338,7 +250,6 @@ canvas.addEventListener('mousedown', (e) => {
     }
 });
 
-// Hilfsfunktion: Abstand Punkt zu einer Strecke (Linien-Klickerkennung)
 function distToSegment(p, v, w) {
     const l2 = Math.hypot(v.x - w.x, v.y - w.y) ** 2;
     if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
@@ -358,6 +269,7 @@ function isPointInPolygon(point, vs) {
 
 function finishPolygon() {
     if (polygonPoints.length > 2) {
+        pushState();
         let type = 'lawn';
         if (State.currentTool === 'draw-drip') type = 'drip';
         if (State.currentTool === 'draw-deadzone') type = 'deadzone';
@@ -367,7 +279,6 @@ function finishPolygon() {
             points: [...polygonPoints],
             dripDistance: 33,
             layoutMode: 'loop',
-            rotationAngle: 0,
             locked: false,
             areaM2: calculatePolygonArea(polygonPoints, State.pixelsPerMeter)
         };
@@ -378,12 +289,6 @@ function finishPolygon() {
         setTool('select');
     }
 }
-
-canvas.addEventListener('dblclick', () => {
-    if (State.currentTool === 'draw-lawn' || State.currentTool === 'draw-drip' || State.currentTool === 'draw-deadzone') {
-        finishPolygon();
-    }
-});
 
 canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
@@ -398,16 +303,13 @@ canvas.addEventListener('mousemove', (e) => {
 
     if (activeHandleIndex !== -1 && State.selectedObj && State.selectedObj.points && !State.selectedObj.locked) {
         State.selectedObj.points[activeHandleIndex] = world;
-        if (State.selectedObj.type !== 'pipe') {
-            State.selectedObj.areaM2 = calculatePolygonArea(State.selectedObj.points, State.pixelsPerMeter);
-        }
         updateSidebar(State.selectedObj);
         draw();
         return;
     }
 
     currentMouseWorld = world;
-    if (State.currentTool !== 'select') draw();
+    draw();
 });
 
 canvas.addEventListener('mouseup', () => {
@@ -415,8 +317,8 @@ canvas.addEventListener('mouseup', () => {
     activeHandleIndex = -1;
 });
 
-// Haupt-Zeichenschleife
-function draw() {
+// Haupt-Zeichenschleife mit Live-Vorschau
+window.draw = function() {
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(offsetX, offsetY);
@@ -436,32 +338,25 @@ function draw() {
             drawSprinkler(ctx, obj, scale, State.pixelsPerMeter, isSelected);
         } else if (obj.type === 'pipe') {
             drawPipe(ctx, obj, scale, isSelected);
-        } else if (obj.type === 'source') {
-            ctx.beginPath();
-            ctx.arc(obj.x, obj.y, 8 / scale, 0, Math.PI * 2);
-            ctx.fillStyle = '#3b82f6';
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2 / scale;
-            ctx.fill();
-            ctx.stroke();
         }
     });
 
-    // Aktives Polygon beim Zeichnen
-    if (polygonPoints.length > 0) {
+    // Live-Vorschau beim Rohre zeichnen (Gelbe Führungslinie)
+    if (State.currentTool === 'draw-pipe' && pipePoints.length > 0 && currentMouseWorld) {
         ctx.beginPath();
-        ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
-        polygonPoints.forEach(p => ctx.lineTo(p.x, p.y));
-        if (currentMouseWorld) ctx.lineTo(currentMouseWorld.x, currentMouseWorld.y);
-        ctx.strokeStyle = '#f1c40f';
+        ctx.moveTo(pipePoints[0].x, pipePoints[0].y);
+        ctx.lineTo(currentMouseWorld.x, currentMouseWorld.y);
+        ctx.strokeStyle = '#f59e0b';
         ctx.lineWidth = 2 / scale;
+        ctx.setLineDash([4 / scale, 4 / scale]);
         ctx.stroke();
+        ctx.setLineDash([]);
     }
 
     ctx.restore();
-}
+};
 
 window.onload = () => {
     updateSidebar(null);
-    draw();
+    window.draw();
 };
