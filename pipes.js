@@ -1,7 +1,9 @@
-// js/pipes.js - Vollständiges Pipe-System mit stabiler Abzweigung
+// js/pipes.js - Vollständiges, abgestimmtes Pipe-Modul
 import { State } from './state.js';
 
-
+/**
+ * Zeichnet eine einzelne Pipe auf dem Canvas
+ */
 export function drawPipe(ctx, pipe) {
     if (!pipe.points || pipe.points.length < 2) return;
 
@@ -15,14 +17,12 @@ export function drawPipe(ctx, pipe) {
 
     const isSelected = (State.selectedObj === pipe);
     
-    // Priorität: Eigene Custom-Farbe > Zonen-Farbe > Standard Blau
     ctx.strokeStyle = isSelected ? '#38bdf8' : (pipe.color || getZoneColor(pipe.valveZone));
     ctx.lineWidth = isSelected ? 5 : (pipe.diameter ? Math.max(2, pipe.diameter / 8) : 3);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
-    // Punkte hervorheben, wenn selektiert oder im Bearbeitungsmodus
     if (isSelected || pipe.allowPointEdit) {
         pipe.points.forEach((pt, idx) => {
             ctx.beginPath();
@@ -43,7 +43,7 @@ export function drawPipe(ctx, pipe) {
  */
 export function getZoneColor(zone) {
     const colors = {
-        'main': '#ef4444', // Rot (Vor Ventilbox / Hauptleitung)
+        'main': '#ef4444', // Rot (Hauptleitung)
         'v1': '#3b82f6',   // Blau (Ventil 1)
         'v2': '#10b981',   // Grün (Ventil 2)
         'v3': '#f59e0b',   // Gelb (Ventil 3)
@@ -57,14 +57,14 @@ export function getZoneColor(zone) {
  */
 export function getPipeSegments(points) {
     if (!points || points.length < 2) return [];
-    const scale = State.scale || 0.05; // Pixel zu Meter Umrechnung
+    const scale = (State && State.scale) ? State.scale : 20.0;
     const segments = [];
 
     for (let i = 0; i < points.length - 1; i++) {
         const dx = points[i+1].x - points[i].x;
         const dy = points[i+1].y - points[i].y;
         const distPx = Math.sqrt(dx * dx + dy * dy);
-        segments.push(parseFloat((distPx * scale).toFixed(2)));
+        segments.push(parseFloat((distPx / scale).toFixed(2)));
     }
     return segments;
 }
@@ -78,7 +78,7 @@ export function calculatePipeLength(points) {
 }
 
 /**
- * Prüft, ob ein Klick in der Nähe einer Pipe war (für Selektion)
+ * Prüft, ob ein Klick in der Nähe einer Pipe war
  */
 export function isPointNearPipe(pt, pipe, maxDist = 10) {
     if (!pipe.points || pipe.points.length < 2) return false;
@@ -92,9 +92,6 @@ export function isPointNearPipe(pt, pipe, maxDist = 10) {
     return false;
 }
 
-/**
- * Hilfsfunktion: Abstand Punkt zu Liniensegment
- */
 function distToSegment(p, v, w) {
     const l2 = (v.x - w.x) ** 2 + (v.y - w.y) ** 2;
     if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
@@ -104,7 +101,7 @@ function distToSegment(p, v, w) {
 }
 
 /**
- * Erstellt ein neues, sauberes Pipe-Objekt
+ * Erstellt ein neues Pipe-Objekt
  */
 export function createPipe(startPoint, zone = 'v1', diameter = 25) {
     return {
@@ -120,8 +117,7 @@ export function createPipe(startPoint, zone = 'v1', diameter = 25) {
 }
 
 /**
- * Binds/Snaps einen Punkt an eine bestehende Pipe (für Abzweigungen)
- * ohne die Ursprungs-Pipe zu überschreiben.
+ * Snapt Punkte an bestehende Leitungen
  */
 export function getSnapPointOnPipes(clickPt, existingPipes, snapRadius = 12) {
     let bestSnap = null;
@@ -130,7 +126,6 @@ export function getSnapPointOnPipes(clickPt, existingPipes, snapRadius = 12) {
     existingPipes.forEach(pipe => {
         if (!pipe.points) return;
         
-        // 1. Prüfe Snap auf bestehende Punkte (T-Stück / Ecken)
         pipe.points.forEach(pt => {
             const d = Math.hypot(clickPt.x - pt.x, clickPt.y - pt.y);
             if (d < minDistance) {
@@ -139,7 +134,6 @@ export function getSnapPointOnPipes(clickPt, existingPipes, snapRadius = 12) {
             }
         });
 
-        // 2. Prüfe Snap auf die Linie (Abzweig mitten auf der Strecke)
         if (!bestSnap) {
             for (let i = 0; i < pipe.points.length - 1; i++) {
                 const p1 = pipe.points[i];
@@ -147,7 +141,6 @@ export function getSnapPointOnPipes(clickPt, existingPipes, snapRadius = 12) {
                 const d = distToSegment(clickPt, p1, p2);
                 if (d < minDistance) {
                     minDistance = d;
-                    // Projiziere Punkt exakt auf die Linie
                     const l2 = (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2;
                     let t = ((clickPt.x - p1.x) * (p2.x - p1.x) + (clickPt.y - p1.y) * (p2.y - p1.y)) / l2;
                     t = Math.max(0, Math.min(1, t));
@@ -166,12 +159,11 @@ export function getSnapPointOnPipes(clickPt, existingPipes, snapRadius = 12) {
 }
 
 /**
- * Generiert eine parallele Versatz-Leitung (Parallel-Offset)
+ * Generiert eine parallele Versatz-Leitung
  */
 export function generateParallelPipes(originalPipe, offsetMeters = 0.3) {
     if (!originalPipe || !originalPipe.points || originalPipe.points.length < 2) return null;
     
-    // Pixel-Abstand berechnen (Standard 0.3m Versatz)
     const scale = (State && State.scale) ? State.scale : 20.0;
     const offsetPx = offsetMeters * scale; 
 
