@@ -1,4 +1,4 @@
-// pipes.js - Hydraulik, geschützte Strang-Integrität & Seitenleiste
+// pipes.js - Hydraulik, geschützte Strang-Integrität & stabile Sidebar
 import { State } from './state.js';
 
 const PIPE_COLORS = ['#38bdf8', '#f59e0b', '#10b981', '#a855f7', '#ec4899', '#ef4444'];
@@ -9,11 +9,9 @@ export function createPipe(points, diameter = 25, label = 'Hauptstrang', color =
         type: 'pipe',
         label: label,
         points: JSON.parse(JSON.stringify(points)),
-        nodesData: {},
         diameter: Number(diameter),
         customColor: color || PIPE_COLORS[0],
-        locked: true, // Standardmäßig GESCHÜTZT/GEKOPPELT
-        allowPointEdit: false
+        allowPointEdit: false // Standardmäßig fixiert/gekoppelt
     };
 }
 
@@ -54,7 +52,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
 
     ctx.save();
     
-    // Unzerreißbare, durchgehende Linie
+    // Durchgehende Linie
     ctx.beginPath();
     ctx.moveTo(obj.points[0].x, obj.points[0].y);
     for (let i = 1; i < obj.points.length; i++) {
@@ -67,7 +65,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
     ctx.lineJoin = 'round';
     ctx.stroke();
 
-    // Längenangaben an den Segmenten
+    // Längen an den Segmenten anzeigen
     for (let i = 1; i < obj.points.length; i++) {
         const p1 = obj.points[i - 1];
         const p2 = obj.points[i];
@@ -87,7 +85,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
         ctx.fillText(`${segMeters}m`, midX, midY);
     }
 
-    // Knotenpunkte anzeigen (Editier-Handles nur wenn freigeschaltet)
+    // Knotenpunkte
     obj.points.forEach((p, index) => {
         const isEnd = index === 0 || index === obj.points.length - 1;
         ctx.beginPath();
@@ -104,7 +102,7 @@ export function drawPipe(ctx, obj, scale, isSelected) {
 
 export function generateParallelPipes(basePoints, count = 1, diameter = 25) {
     const pxm = State.pixelsPerMeter || 20;
-    const offsetPx = 0.10 * pxm; // Exakt 10 cm Abstand
+    const offsetPx = 0.10 * pxm; // 10 cm Abstand
     const newPipes = [];
 
     for (let c = 0; c < count; c++) {
@@ -149,16 +147,17 @@ export function getPipeSidebarHTML(obj) {
         <div style="padding: 15px; color: #fff; font-family: sans-serif;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <h3 style="color: ${obj.customColor || '#38bdf8'}; margin:0; font-size:16px;">🛠️ ${obj.label || 'Rohrleitung'}</h3>
-                <button onclick="deselectCurrent()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:18px;">✕</button>
+                <button onclick="window.deselectCurrent()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:18px;">✕</button>
             </div>
 
-            <!-- Strang-Schutz / Kopplungs-Schalter -->
-            <div style="background:#1e293b; padding:10px; border-radius:6px; border:1px solid #475569; margin-bottom:12px;">
-                <label style="display:flex; align-items:center; justify-content:space-between; font-size:12px; cursor:pointer;">
-                    <span>🔒 Strang gekoppelt (geschützt):</span>
-                    <input type="checkbox" ${!isEditMode ? 'checked' : ''} onchange="togglePipeLock(!this.checked)">
-                </label>
-                <p style="font-size:10px; color:#94a3b8; margin:4px 0 0 0;">Deaktivieren, um Punkte einzeln zu verschieben.</p>
+            <!-- Steuerungs-Buttons -->
+            <div style="margin-bottom:12px; display:flex; flex-direction:column; gap:8px;">
+                <button onclick="window.togglePipeLock()" style="width:100%; padding:8px; background:${isEditMode ? '#eab308' : '#3b82f6'}; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">
+                    ${isEditMode ? '🔒 Strang fixieren (Schutz an)' : '🔓 Punkte frei verschieben'}
+                </button>
+                <button onclick="window.splitSelectedPipe()" style="width:100%; padding:8px; background:#dc2626; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">
+                    ✂️ Strang entkoppeln / trennen
+                </button>
             </div>
 
             <div style="background:#0f172a; padding:12px; border-radius:6px; border:1px solid #334155; margin-bottom:15px;">
@@ -172,14 +171,8 @@ export function getPipeSidebarHTML(obj) {
                 </div>
             </div>
 
-            <div style="border-top:1px solid #334155; padding-top:10px; margin-bottom:12px;">
-                <button onclick="splitSelectedPipe()" style="width:100%; padding:8px; background:#dc2626; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">
-                    ✂️ Strang an Mittelpunkt entkoppeln
-                </button>
-            </div>
-
             <label style="display:block; font-size:11px; color:#94a3b8; margin-bottom:2px;">Durchmesser:</label>
-            <select id="pipe-diameter" onchange="updatePipeProp('diameter', this.value)" style="width:100%; padding:6px; margin-bottom:10px; background:#1e293b; color:#fff; border:1px solid #475569; border-radius:4px;">
+            <select id="pipe-diameter" onchange="window.updatePipeProp('diameter', this.value)" style="width:100%; padding:6px; margin-bottom:10px; background:#1e293b; color:#fff; border:1px solid #475569; border-radius:4px;">
                 <option value="16" ${obj.diameter === 16 ? 'selected' : ''}>16 mm Flexrohr</option>
                 <option value="25" ${obj.diameter === 25 ? 'selected' : ''}>25 mm PE-Rohr</option>
                 <option value="32" ${obj.diameter === 32 ? 'selected' : ''}>32 mm PE-Rohr</option>
@@ -187,41 +180,40 @@ export function getPipeSidebarHTML(obj) {
         </div>`;
 }
 
-export function updatePipeProp(prop, val) {
+// Globale Fenster-Funktionen für Seitenleisten-Aktionen
+window.togglePipeLock = () => {
+    if (State.selectedObj && State.selectedObj.type === 'pipe') {
+        State.selectedObj.allowPointEdit = !State.selectedObj.allowPointEdit;
+        if (typeof window.updateSidebar === 'function') window.updateSidebar(State.selectedObj);
+        if (typeof window.draw === 'function') window.draw();
+    }
+};
+
+window.splitSelectedPipe = () => {
+    if (State.selectedObj && State.selectedObj.type === 'pipe' && State.selectedObj.points.length > 2) {
+        const pipe = State.selectedObj;
+        const mid = Math.floor(pipe.points.length / 2);
+        
+        const points1 = pipe.points.slice(0, mid + 1);
+        const points2 = pipe.points.slice(mid);
+
+        const pipe1 = createPipe(points1, pipe.diameter, `${pipe.label} (Teil 1)`, pipe.customColor);
+        const pipe2 = createPipe(points2, pipe.diameter, `${pipe.label} (Teil 2)`, pipe.customColor);
+
+        State.objects = State.objects.filter(o => o !== pipe);
+        State.objects.push(pipe1, pipe2);
+        State.selectedObj = pipe1;
+
+        if (typeof window.updateSidebar === 'function') window.updateSidebar(State.selectedObj);
+        if (typeof window.draw === 'function') window.draw();
+    } else {
+        alert("Der Strang hat zu wenige Punkte zum Trennen.");
+    }
+};
+
+window.updatePipeProp = (prop, val) => {
     if (State.selectedObj && State.selectedObj.type === 'pipe') {
         State.selectedObj[prop] = prop === 'diameter' ? Number(val) : val;
         if (typeof window.draw === 'function') window.draw();
     }
-}
-
-if (typeof window !== 'undefined') {
-    window.togglePipeLock = (lockStatus) => {
-        if (State.selectedObj && State.selectedObj.type === 'pipe') {
-            State.selectedObj.allowPointEdit = !lockStatus;
-            if (typeof window.updateSidebar === 'function') window.updateSidebar(State.selectedObj);
-            if (typeof window.draw === 'function') window.draw();
-        }
-    };
-
-    window.splitSelectedPipe = () => {
-        if (State.selectedObj && State.selectedObj.type === 'pipe' && State.selectedObj.points.length > 2) {
-            const pipe = State.selectedObj;
-            const mid = Math.floor(pipe.points.length / 2);
-            
-            const points1 = pipe.points.slice(0, mid + 1);
-            const points2 = pipe.points.slice(mid);
-
-            const pipe1 = createPipe(points1, pipe.diameter, `${pipe.label} (Teil 1)`, pipe.customColor);
-            const pipe2 = createPipe(points2, pipe.diameter, `${pipe.label} (Teil 2)`, pipe.customColor);
-
-            State.objects = State.objects.filter(o => o !== pipe);
-            State.objects.push(pipe1, pipe2);
-            State.selectedObj = pipe1;
-
-            if (typeof window.updateSidebar === 'function') window.updateSidebar(State.selectedObj);
-            if (typeof window.draw === 'function') window.draw();
-        } else {
-            alert("Strang hat zu wenige Punkte zum Trennen.");
-        }
-    };
-}
+};
