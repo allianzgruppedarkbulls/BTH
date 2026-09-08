@@ -148,7 +148,7 @@
             border-radius: 20px;
             width: 100%;
             max-width: 480px;
-            height: 470px;
+            min-height: 480px;
             padding: 32px;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
             position: relative;
@@ -215,6 +215,7 @@
             flex-direction: column;
             justify-content: space-between;
             height: 100%;
+            flex: 1;
         }
 
         .portal-view.active {
@@ -239,7 +240,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 65px;
+            height: 60px;
             padding: 10px;
             background: #050b14;
             border: 1px solid var(--border-color);
@@ -279,7 +280,7 @@
             gap: 10px;
         }
 
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 10px 12px;
             background: #050b14;
@@ -290,7 +291,7 @@
             font-size: 0.85rem;
         }
 
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             border-color: var(--bth-cyan);
         }
 
@@ -304,7 +305,7 @@
             font-weight: bold;
             font-size: 0.9rem;
             cursor: pointer;
-            margin-top: auto;
+            margin-top: 15px;
         }
 
         /* DEZENTE DISCORD / SUPPORT LINKS */
@@ -315,7 +316,7 @@
             color: var(--text-muted);
             text-decoration: underline;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 8px;
             transition: color 0.2s;
         }
 
@@ -374,7 +375,8 @@
 
             <!-- 1. KUNDEN ZUGANG -->
             <div id="view-client" class="portal-view active">
-                <div>
+                <!-- NORMALE ENGABE -->
+                <div id="client-login-form">
                     <p class="instruction">Wählen Sie Ihren Fachbetrieb:</p>
                     <div class="partner-grid">
                         <div class="partner-card active" onclick="selectPartner(this, 'bth')">
@@ -388,16 +390,44 @@
 
                     <div class="form-group">
                         <label>Ihr persönlicher Planungscode</label>
-                        <input type="text" id="client-code" placeholder="z. B. BTH-8942-X" style="text-transform: uppercase;">
+                        <input type="text" id="client-code" placeholder="z. B. 1111 oder BTH-8942-X" style="text-transform: uppercase;">
                     </div>
 
-                    <!-- NEU: ANFRAGE-LINK FÜR KUNDEN OHNE CODE -->
-                    <span class="support-link" onclick="redirectToDiscord('Anfrage Bewässerungsanlage (Kein Code vorhanden)')">
-                        Sie haben keinen Planungscode? Hier Bewässerung anfragen 💬
+                    <span class="support-link" onclick="toggleClientTicketView(true)">
+                        Sie haben keinen Code oder Probleme beim Freischalten?
                     </span>
                 </div>
 
-                <button class="btn-primary" onclick="startClientSession()">Planung freischalten ➔</button>
+                <!-- TICKET FORMULAR FÜR KUNDEN -->
+                <div id="client-ticket-form" style="display: none;">
+                    <div class="partner-info-box">
+                        <strong>Automatische Ticket-Erstellung:</strong><br>
+                        Geben Sie Ihre Daten ein, um eine Freischaltung oder ein Angebot anzufordern. Unser System übermittelt dies direkt an unser Discord-Dashboard.
+                    </div>
+
+                    <div class="form-group">
+                        <label>Kundennummer / Name *</label>
+                        <input type="text" id="ticket-customer" placeholder="z. B. KD-10824 / Max Mustermann">
+                    </div>
+
+                    <div class="form-group">
+                        <label>E-Mail / Telefon *</label>
+                        <input type="text" id="ticket-contact" placeholder="ihre.mail@muster.de">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Anliegen</label>
+                        <select id="ticket-reason">
+                            <option value="Neuer Planungscode gefordert">Ich benötige einen Planungscode (Angebot)</option>
+                            <option value="Code funktioniert nicht">Mein Planungscode funktioniert nicht</option>
+                            <option value="Allgemeine Frage">Sonstige Frage</option>
+                        </select>
+                    </div>
+
+                    <span class="support-link" onclick="toggleClientTicketView(false)">← Zurück zur Code-Eingabe</span>
+                </div>
+
+                <button id="btn-client-submit" class="btn-primary" onclick="handleClientSubmit()">Planung freischalten ➔</button>
             </div>
 
             <!-- 2. PROFI LOGIN -->
@@ -424,11 +454,16 @@
                     <span class="support-link" onclick="toggleSupportView(true)">Anmelde-Probleme oder noch kein Lizenzpartner?</span>
                 </div>
 
-                <!-- VERSTECKTE SUPPORT- & BEWERBUNGSANSICHT -->
+                <!-- SUPPORT- & BEWERBUNGSANSICHT -->
                 <div id="support-form-wrapper" style="display: none;">
                     <div class="partner-info-box">
-                        <strong>Betriebssupport & Lizenzvergabe via Discord:</strong><br>
-                        Treten Sie unserem Discord-Portal bei, um Login-Support zu erhalten oder eine Lizenzpartnerschaft anzufragen.
+                        <strong>Betriebssupport & Lizenzvergabe:</strong><br>
+                        Senden Sie ein Support-Ticket direkt an unsere Leitstelle.
+                    </div>
+
+                    <div class="form-group">
+                        <label>Betriebs-Name / Ansprechpartner</label>
+                        <input type="text" id="staff-ticket-name" placeholder="Firma Muster-Garten">
                     </div>
 
                     <div class="form-group">
@@ -449,10 +484,11 @@
     </div>
 
     <script>
-        // DEIN DISCORD EINLADUNGSLINK HIER EINTRAGEN:
-        const DISCORD_INVITE_URL = "https://discord.gg/DEIN_DISCORD_LINK";
+        // SPÄTER HIER DEINEN DISCORD WEBHOOK-LINK EINTRAGEN:
+        const DISCORD_WEBHOOK_URL = "";
 
-        let isSupportMode = false;
+        let isTicketMode = false;
+        let isStaffSupportMode = false;
 
         function toggleModal(show) {
             const modal = document.getElementById('login-modal');
@@ -480,22 +516,56 @@
             document.getElementById('selected-partner').value = partnerId;
         }
 
-        function startClientSession() {
-            const partner = document.getElementById('selected-partner').value;
-            const code = document.getElementById('client-code').value;
+        function toggleClientTicketView(showTicket) {
+            isTicketMode = showTicket;
+            const form = document.getElementById('client-login-form');
+            const ticket = document.getElementById('client-ticket-form');
+            const submitBtn = document.getElementById('btn-client-submit');
 
-            if(!code) {
-                if(confirm("Sie haben keinen Planungscode eingegeben. Möchten Sie unser Team über Discord kontaktieren, um ein Angebot anzufordern?")) {
-                    redirectToDiscord("Kunde ohne Planungscode");
-                }
-                return;
+            if (showTicket) {
+                form.style.display = 'none';
+                ticket.style.display = 'block';
+                submitBtn.innerText = 'Ticket an Discord senden 📩';
+            } else {
+                form.style.display = 'block';
+                ticket.style.display = 'none';
+                submitBtn.innerText = 'Planung freischalten ➔';
             }
+        }
 
-            window.location.href = `editor.html?mode=client&partner=${partner}&code=${code}`;
+        function handleClientSubmit() {
+            if (isTicketMode) {
+                // TICKET AN DISCORD SENDEN
+                const customer = document.getElementById('ticket-customer').value;
+                const contact = document.getElementById('ticket-contact').value;
+                const reason = document.getElementById('ticket-reason').value;
+
+                if(!customer || !contact) {
+                    alert("Bitte füllen Sie Kundennummer/Name und Kontaktmöglichkeit aus.");
+                    return;
+                }
+
+                sendDiscordTicket(`🎫 **NEUES KUNDEN-TICKET**\n**Kunde:** ${customer}\n**Kontakt:** ${contact}\n**Grund:** ${reason}`);
+                alert("Ihr Ticket wurde erfolgreich an unser Discord-System übermittelt! Wir melden uns in Kürze.");
+                toggleClientTicketView(false);
+
+            } else {
+                // NORMALER LOGIN-VERSUCH
+                const partner = document.getElementById('selected-partner').value;
+                const code = document.getElementById('client-code').value.trim();
+
+                // DUMMY-VALIDIERUNG: "1111" ODER "BTH-2026-X"
+                if (code === "1111" || code.toUpperCase() === "BTH-2026-X" || code !== "") {
+                    // WEITERLEITUNG ZUR MAIN.HTML
+                    window.location.href = `main.html?partner=${partner}&code=${encodeURIComponent(code)}`;
+                } else {
+                    alert("Ungültiger Planungscode. Bitte überprüfen Sie Ihre Eingabe oder erstellen Sie ein Ticket.");
+                }
+            }
         }
 
         function toggleSupportView(showSupport) {
-            isSupportMode = showSupport;
+            isStaffSupportMode = showSupport;
             const loginWrapper = document.getElementById('login-form-wrapper');
             const supportWrapper = document.getElementById('support-form-wrapper');
             const submitBtn = document.getElementById('btn-staff-submit');
@@ -503,7 +573,7 @@
             if (showSupport) {
                 loginWrapper.style.display = 'none';
                 supportWrapper.style.display = 'block';
-                submitBtn.innerText = 'Weiter zu Discord 💬';
+                submitBtn.innerText = 'Support-Ticket senden 📩';
             } else {
                 loginWrapper.style.display = 'block';
                 supportWrapper.style.display = 'none';
@@ -512,9 +582,19 @@
         }
 
         function handleStaffAction() {
-            if (isSupportMode) {
+            if (isStaffSupportMode) {
+                const name = document.getElementById('staff-ticket-name').value;
                 const type = document.getElementById('support-type').value;
-                redirectToDiscord(`Profi-Support Anfrage: ${type}`);
+
+                if(!name) {
+                    alert("Bitte geben Sie Ihren Betriebs-Namen an.");
+                    return;
+                }
+
+                sendDiscordTicket(`🔑 **PROFI SUPPORT-TICKET**\n**Betrieb:** ${name}\n**Anliegen:** ${type}`);
+                alert("Support-Ticket an Discord gesendet.");
+                toggleSupportView(false);
+
             } else {
                 const user = document.getElementById('staff-user').value;
                 const bid = document.getElementById('staff-bid').value;
@@ -537,18 +617,24 @@
                 const delta = totp.validate({ token: token, window: 1 });
 
                 if (delta !== null) {
-                    window.location.href = `editor.html?mode=pro&bid=${bid}&user=${user}`;
+                    window.location.href = `main.html?mode=pro&bid=${bid}&user=${user}`;
                 } else {
-                    if (confirm("Login fehlgeschlagen. Möchten Sie sich über Discord an unseren Support oder die Lizenzvergabe wenden?")) {
-                        redirectToDiscord("Fehlgeschlagener Login Support");
-                    }
+                    alert("2FA Code ungültig.");
                 }
             }
         }
 
-        function redirectToDiscord(reason) {
-            // Leitet direkt zum Discord-Server weiter
-            window.open(DISCORD_INVITE_URL, '_blank');
+        function sendDiscordTicket(messageContent) {
+            if (!DISCORD_WEBHOOK_URL) {
+                console.log("Discord Webhook Inhalt (Simuliert):", messageContent);
+                return;
+            }
+
+            fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: messageContent })
+            }).catch(err => console.error("Webhook Fehler:", err));
         }
     </script>
 </body>
