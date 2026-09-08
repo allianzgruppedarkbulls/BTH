@@ -36,10 +36,10 @@
         /* ZENTRALES RUNDES HAUPTLOGO MIT NEON-GLOW */
         .hero-center {
             position: relative;
-            width: 520px;
-            height: 520px;
-            max-width: 80vw;
-            max-height: 80vw;
+            width: 580px;
+            height: 580px;
+            max-width: 85vw;
+            max-height: 85vw;
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -47,6 +47,7 @@
             box-shadow: 0 0 90px rgba(2, 132, 199, 0.45), 0 0 35px rgba(56, 189, 248, 0.25);
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
+            background: #000;
         }
 
         .hero-center:hover {
@@ -61,7 +62,7 @@
             border-radius: 50%;
         }
 
-        /* LINKER LOGIN-BUTTON (VERTIKAL) */
+        /* LINKER SEITEN-BUTTON (VERTIKAL) */
         .btn-left {
             position: absolute;
             left: 25px;
@@ -143,7 +144,7 @@
             color: #fff;
         }
 
-        /* TABS UNTERSCHIED KUNDE / PROFI */
+        /* TABS KUNDE / MITARBEITER */
         .portal-tabs {
             display: flex;
             background: #050b14;
@@ -250,12 +251,12 @@
 </head>
 <body>
 
-    <!-- LINKER SEITEN-BUTTON: LOGIN -->
+    <!-- LOGIN BUTTON -->
     <button class="btn-left" onclick="toggleModal(true)">LOGIN</button>
 
-    <!-- ZENTRALES RUNDES HAUPTLOGO -->
+    <!-- RUNDES HAUPTMOTIV -->
     <div class="hero-center">
-        <img src="BTH.png" alt="BTH PLANWERK" class="hero-img">
+        <img src="./BTH.png" alt="BTH PLANWERK" class="hero-img">
     </div>
 
     <!-- POPUP OVERLAY FÜR DEN LOGIN -->
