@@ -34,10 +34,10 @@
             color: var(--text-main);
         }
 
-        /* 1. OBEN: COOLLER SLOGAN / SCHRIFTZUG (Kommt zuerst von oben) */
+        /* 1. OBEN: SLOGAN */
         .top-banner {
             position: absolute;
-            top: 40px;
+            top: 30px;
             text-align: center;
             z-index: 10;
             animation: fadeInDown 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -51,40 +51,33 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-transform: uppercase;
-            text-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
         }
 
         .top-banner p {
             font-size: 0.85rem;
             color: var(--bth-cyan);
             letter-spacing: 3px;
-            margin-top: 6px;
+            margin-top: 4px;
             text-transform: uppercase;
             font-weight: 700;
             opacity: 0.8;
         }
 
-        /* 2. ZENTRUM: DEUTLICH GRÖSSERES RUNDES HAUPTLOGO */
+        /* 2. ZENTRUM: BILD */
         .hero-center {
             position: relative;
-            width: 720px; /* Nochmals deutlich vergrößert */
-            height: 720px;
-            max-width: 82vh;
-            max-height: 82vh;
+            width: 700px;
+            height: 700px;
+            max-width: 80vh;
+            max-height: 80vh;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             box-shadow: 0 0 120px rgba(2, 132, 199, 0.5), 0 0 45px rgba(56, 189, 248, 0.3);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
             background: #000;
             animation: zoomIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .hero-center:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 140px rgba(2, 132, 199, 0.65), 0 0 55px rgba(56, 189, 248, 0.4);
         }
 
         .hero-img {
@@ -94,7 +87,7 @@
             border-radius: 50%;
         }
 
-        /* 3. LINKER LOGIN-BUTTON (Blendet sich nach 2 Sekunden verzögert ein) */
+        /* 3. LOGIN-BUTTON (VERZÖGERT) */
         .btn-left {
             position: absolute;
             left: 30px;
@@ -113,8 +106,8 @@
             background: linear-gradient(180deg, #10b981 0%, #059669 100%);
             color: #000;
             box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
-            opacity: 0; /* Startet unsichtbar */
-            animation: fadeInLeft 0.8s ease forwards 2s; /* 2 Sekunden Delay! */
+            opacity: 0;
+            animation: fadeInLeft 0.8s ease forwards 2s;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
@@ -123,7 +116,7 @@
             transform: translateY(-50%) scale(1.08) !important;
         }
 
-        /* POPUP MODAL (LOGIN FORMULAR) */
+        /* MODAL / POPUP */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -151,7 +144,7 @@
             border: 1px solid rgba(56, 189, 248, 0.3);
             border-radius: 20px;
             width: 100%;
-            max-width: 460px;
+            max-width: 520px;
             padding: 32px;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
             position: relative;
@@ -178,32 +171,35 @@
             color: #fff;
         }
 
-        /* TABS KUNDE / MITARBEITER */
+        /* 3 TABS BENUTZERÜBERSICHT */
         .portal-tabs {
             display: flex;
             background: #050b14;
             padding: 4px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            margin-bottom: 22px;
             border: 1px solid var(--border-color);
+            gap: 4px;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 10px;
+            padding: 10px 6px;
             border: none;
             background: transparent;
             color: var(--text-muted);
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             cursor: pointer;
             border-radius: 8px;
             transition: all 0.2s ease;
+            text-align: center;
         }
 
         .tab-btn.active {
             background: var(--bth-blue-primary);
             color: #fff;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
         }
 
         .portal-view {
@@ -217,32 +213,56 @@
         .instruction {
             font-size: 0.85rem;
             color: var(--text-muted);
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
+        /* PREMIUM LOGO GRID */
         .partner-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .partner-card {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
+            justify-content: center;
+            height: 85px;
+            padding: 12px;
             background: #050b14;
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .partner-card img {
+            max-height: 45px;
+            max-width: 90%;
+            object-fit: contain;
+        }
+
+        .partner-card span {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .partner-card:hover {
+            border-color: rgba(56, 189, 248, 0.6);
+            background: rgba(2, 132, 199, 0.08);
         }
 
         .partner-card.active {
             border-color: var(--bth-cyan);
-            background: rgba(2, 132, 199, 0.15);
+            background: rgba(2, 132, 199, 0.2);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
         }
 
+        /* FORMULAR FELDER */
         .form-group {
             display: flex;
             flex-direction: column;
@@ -256,7 +276,7 @@
             font-weight: 600;
         }
 
-        input {
+        input, textarea {
             width: 100%;
             padding: 12px;
             background: #050b14;
@@ -264,9 +284,10 @@
             border-radius: 8px;
             color: #fff;
             outline: none;
+            font-size: 0.9rem;
         }
 
-        input:focus {
+        input:focus, textarea:focus {
             border-color: var(--bth-cyan);
         }
 
@@ -278,88 +299,87 @@
             border-radius: 10px;
             color: #fff;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
-        /* KEYFRAME ANIMATIONEN */
+        .btn-primary:hover {
+            background: #0369a1;
+        }
+
+        /* BEWERBUNGS-BOX DESIGN */
+        .partner-info-box {
+            background: rgba(2, 132, 199, 0.1);
+            border-left: 3px solid var(--bth-cyan);
+            padding: 12px 14px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        /* ANIMATIONEN */
         @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes zoomIn {
-            from {
-                opacity: 0;
-                transform: scale(0.85);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         @keyframes fadeInLeft {
-            from {
-                opacity: 0;
-                transform: translateY(-50%) translateX(-40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(-50%) translateX(0);
-            }
+            from { opacity: 0; transform: translateY(-50%) translateX(-40px); }
+            to { opacity: 1; transform: translateY(-50%) translateX(0); }
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. OBEN EINLAUFENDER SCHRIFTZUG -->
+    <!-- OBEN: SLOGAN -->
     <div class="top-banner">
         <h1>BTH PLANWERK</h1>
         <p>Professionelle Bewässerungsplanung & Hydraulik</p>
     </div>
 
-    <!-- 2. NACH 2 SEKUNDEN EINBLENDENDER LOGIN-BUTTON (LINKS) -->
+    <!-- VERZÖGERTER LOGIN-BUTTON -->
     <button class="btn-left" onclick="toggleModal(true)">LOGIN</button>
 
-    <!-- 3. GROSSES RUNDES HAUPTMOTIV (ZENTRUM) -->
+    <!-- ZENTRALES HAUPTBILD -->
     <div class="hero-center">
         <img src="./BTH.png" alt="BTH PLANWERK" class="hero-img">
     </div>
 
-    <!-- POPUP OVERLAY FÜR DEN LOGIN -->
+    <!-- POPUP OVERLAY MODAL -->
     <div id="login-modal" class="modal-overlay">
         <div class="portal-card">
             <button class="close-btn" onclick="toggleModal(false)">&times;</button>
             
+            <!-- DIE 3 REITER -->
             <div class="portal-tabs">
                 <button id="tab-client" class="tab-btn active" onclick="switchTab('client')">Kunden-Zugang</button>
+                <button id="tab-partner" class="tab-btn" onclick="switchTab('partner')">Partner werden 🤝</button>
                 <button id="tab-staff" class="tab-btn" onclick="switchTab('staff')">Mitarbeiter-Login</button>
             </div>
 
-            <!-- KUNDEN ZUGANG -->
+            <!-- 1. KUNDEN ZUGANG (LOGO-GRID) -->
             <div id="view-client" class="portal-view active">
-                <p class="instruction">Wählen Sie Ihren Partnerbetrieb:</p>
+                <p class="instruction">Wählen Sie Ihren ausführenden Fachbetrieb:</p>
                 
                 <div class="partner-grid">
+                    <!-- Partner 1 (BTH Hamburg) -->
                     <div class="partner-card active" onclick="selectPartner(this, 'bth')">
-                        <span>🌊</span>
-                        <div>
-                            <strong>BTH Hamburg</strong>
-                        </div>
+                        <!-- Du kannst hier später ein Bild eintragen z.B. <img src="logo-bth.png" alt="BTH"> -->
+                        <span>🌊 BTH Hamburg</span>
                     </div>
 
+                    <!-- Partner 2 (Gartenfit) -->
                     <div class="partner-card" onclick="selectPartner(this, 'gartenfit')">
-                        <span>🌱</span>
-                        <div>
-                            <strong>Firma Gartenfit</strong>
-                        </div>
+                        <!-- <img src="logo-gartenfit.png" alt="Gartenfit"> -->
+                        <span>🌱 Fa. Gartenfit</span>
                     </div>
                 </div>
 
@@ -373,9 +393,31 @@
                 <button class="btn-primary" onclick="startClientSession()">Planung freischalten ➔</button>
             </div>
 
-            <!-- MITARBEITER LOGIN -->
+            <!-- 2. NEU: BEWERBUNG ALS LIZENZPARTNER -->
+            <div id="view-partner" class="portal-view">
+                <div class="partner-info-box">
+                    <strong>Handverlesene Partnerschaften:</strong><br>
+                    Wir vergeben pro Region nur eine exklusive Lizenz für unser Planungs- & Hydrauliksystem.
+                </div>
+
+                <div class="form-group">
+                    <label>Firmenname / Garten- & Landschaftsbau</label>
+                    <input type="text" id="apply-company" placeholder="z. B. Galabau Muster GmbH">
+                </div>
+
+                <div class="form-group">
+                    <label>Ansprechpartner & E-Mail</label>
+                    <input type="email" id="apply-email" placeholder="name@firma.de">
+                </div>
+
+                <button class="btn-primary" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);" onclick="submitApplication()">
+                    Als Lizenzpartner bewerben ✉️
+                </button>
+            </div>
+
+            <!-- 3. MITARBEITER LOGIN -->
             <div id="view-staff" class="portal-view">
-                <p class="instruction">Interner Zugang für Profi-Planung:</p>
+                <p class="instruction">Interner Zugang für Profi-Planer:</p>
 
                 <div class="form-group">
                     <label>Benutzername / E-Mail</label>
@@ -410,6 +452,9 @@
             if (type === 'client') {
                 document.getElementById('tab-client').classList.add('active');
                 document.getElementById('view-client').classList.add('active');
+            } else if (type === 'partner') {
+                document.getElementById('tab-partner').classList.add('active');
+                document.getElementById('view-partner').classList.add('active');
             } else {
                 document.getElementById('tab-staff').classList.add('active');
                 document.getElementById('view-staff').classList.add('active');
@@ -430,6 +475,16 @@
 
         function startStaffSession() {
             window.location.href = `editor.html?mode=pro`;
+        }
+
+        function submitApplication() {
+            const company = document.getElementById('apply-company').value;
+            if(!company) {
+                alert("Bitte geben Sie Ihren Firmennamen an.");
+                return;
+            }
+            alert("Vielen Dank für Ihr Interesse! Wir prüfen die Verfügbarkeit in Ihrer Region und melden uns umgehend.");
+            toggleModal(false);
         }
     </script>
 </body>
