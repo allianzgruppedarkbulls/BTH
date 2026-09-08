@@ -148,7 +148,7 @@
             border-radius: 20px;
             width: 100%;
             max-width: 480px;
-            height: 460px;
+            height: 470px;
             padding: 32px;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
             position: relative;
@@ -177,7 +177,7 @@
             color: #fff;
         }
 
-        /* TABS (NUR NOCH 2 REITER) */
+        /* TABS */
         .portal-tabs {
             display: flex;
             background: #050b14;
@@ -307,7 +307,7 @@
             margin-top: auto;
         }
 
-        /* DEZENTER SUPPORT LINK UNTER DEM LOGIN */
+        /* DEZENTE DISCORD / SUPPORT LINKS */
         .support-link {
             display: block;
             text-align: center;
@@ -367,7 +367,6 @@
         <div class="portal-card">
             <button class="close-btn" onclick="toggleModal(false)">&times;</button>
             
-            <!-- NUR NOCH 2 TABS -->
             <div class="portal-tabs">
                 <button id="tab-client" class="tab-btn active" onclick="switchTab('client')">Kunden-Zugang</button>
                 <button id="tab-staff" class="tab-btn" onclick="switchTab('staff')">Profi-Login 🔐</button>
@@ -391,12 +390,17 @@
                         <label>Ihr persönlicher Planungscode</label>
                         <input type="text" id="client-code" placeholder="z. B. BTH-8942-X" style="text-transform: uppercase;">
                     </div>
+
+                    <!-- NEU: ANFRAGE-LINK FÜR KUNDEN OHNE CODE -->
+                    <span class="support-link" onclick="redirectToDiscord('Anfrage Bewässerungsanlage (Kein Code vorhanden)')">
+                        Sie haben keinen Planungscode? Hier Bewässerung anfragen 💬
+                    </span>
                 </div>
 
                 <button class="btn-primary" onclick="startClientSession()">Planung freischalten ➔</button>
             </div>
 
-            <!-- 2. PROFI LOGIN (MIT SCHLANKER SUPPORT- & BEWERBUNGS-OPTION) -->
+            <!-- 2. PROFI LOGIN -->
             <div id="view-staff" class="portal-view">
                 <div id="login-form-wrapper">
                     <p class="instruction">Geschützter Zugang für verifizierte Lizenzbetriebe:</p>
@@ -417,34 +421,22 @@
                         <input type="text" id="staff-2fa" placeholder="6-stelliger App-Code" maxlength="7">
                     </div>
 
-                    <!-- UNSCHEINBARER SUPPORT LINK -->
                     <span class="support-link" onclick="toggleSupportView(true)">Anmelde-Probleme oder noch kein Lizenzpartner?</span>
                 </div>
 
                 <!-- VERSTECKTE SUPPORT- & BEWERBUNGSANSICHT -->
                 <div id="support-form-wrapper" style="display: none;">
                     <div class="partner-info-box">
-                        <strong>Betriebssupport & Lizenzvergabe:</strong><br>
-                        Haben Sie Login-Probleme oder möchten Sie sich als neuer Partnerbetrieb für Ihre Region bewerben?
+                        <strong>Betriebssupport & Lizenzvergabe via Discord:</strong><br>
+                        Treten Sie unserem Discord-Portal bei, um Login-Support zu erhalten oder eine Lizenzpartnerschaft anzufragen.
                     </div>
 
                     <div class="form-group">
-                        <label>Anliegen</label>
+                        <label>Ihr Anliegen</label>
                         <select id="support-type">
-                            <label>Anliegen</label>
-                            <option value="support">Hilfe bei Login / Betriebs-ID / 2FA</option>
-                            <option value="partner">Als neuer Lizenzpartner bewerben</option>
+                            <option value="login_support">Hilfe bei Login / Betriebs-ID / 2FA</option>
+                            <option value="partner_apply">Als neuer Lizenzpartner bewerben</option>
                         </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Firmenname / Ansprechpartner</label>
-                        <input type="text" id="support-name" placeholder="Ihre Firma oder Name">
-                    </div>
-
-                    <div class="form-group">
-                        <label>E-Mail / Telefonnummer</label>
-                        <input type="text" id="support-contact" placeholder="kontakt@firma.de">
                     </div>
 
                     <span class="support-link" onclick="toggleSupportView(false)" style="margin-bottom: 8px;">← Zurück zum Login</span>
@@ -457,6 +449,9 @@
     </div>
 
     <script>
+        // DEIN DISCORD EINLADUNGSLINK HIER EINTRAGEN:
+        const DISCORD_INVITE_URL = "https://discord.gg/DEIN_DISCORD_LINK";
+
         let isSupportMode = false;
 
         function toggleModal(show) {
@@ -475,7 +470,7 @@
             } else {
                 document.getElementById('tab-staff').classList.add('active');
                 document.getElementById('view-staff').classList.add('active');
-                toggleSupportView(false); // Zurücksetzen auf Standard-Login
+                toggleSupportView(false);
             }
         }
 
@@ -488,10 +483,17 @@
         function startClientSession() {
             const partner = document.getElementById('selected-partner').value;
             const code = document.getElementById('client-code').value;
+
+            if(!code) {
+                if(confirm("Sie haben keinen Planungscode eingegeben. Möchten Sie unser Team über Discord kontaktieren, um ein Angebot anzufordern?")) {
+                    redirectToDiscord("Kunde ohne Planungscode");
+                }
+                return;
+            }
+
             window.location.href = `editor.html?mode=client&partner=${partner}&code=${code}`;
         }
 
-        // SWAP ZWISCHEN LOGIN UND SUPPORT/BEWERBUNG
         function toggleSupportView(showSupport) {
             isSupportMode = showSupport;
             const loginWrapper = document.getElementById('login-form-wrapper');
@@ -501,7 +503,7 @@
             if (showSupport) {
                 loginWrapper.style.display = 'none';
                 supportWrapper.style.display = 'block';
-                submitBtn.innerText = 'Anfrage / Bewerbung senden ✉️';
+                submitBtn.innerText = 'Weiter zu Discord 💬';
             } else {
                 loginWrapper.style.display = 'block';
                 supportWrapper.style.display = 'none';
@@ -511,19 +513,9 @@
 
         function handleStaffAction() {
             if (isSupportMode) {
-                // SUPPORT / BEWERBUNG ABSCHICKEN
-                const name = document.getElementById('support-name').value;
-                const contact = document.getElementById('support-contact').value;
-
-                if (!name || !contact) {
-                    alert("Bitte tragen Sie Ihren Namen und Kontaktdaten ein.");
-                    return;
-                }
-
-                alert("Vielen Dank! Ihre Nachricht wurde an den System-Support übermittelt. Wir melden uns in Kürze.");
-                toggleModal(false);
+                const type = document.getElementById('support-type').value;
+                redirectToDiscord(`Profi-Support Anfrage: ${type}`);
             } else {
-                // NORMALER LOGIN
                 const user = document.getElementById('staff-user').value;
                 const bid = document.getElementById('staff-bid').value;
                 const token = document.getElementById('staff-2fa').value.replace(/\s+/g, '');
@@ -547,12 +539,16 @@
                 if (delta !== null) {
                     window.location.href = `editor.html?mode=pro&bid=${bid}&user=${user}`;
                 } else {
-                    // BEI FEHLERHAFTER EINGABE DIREKT ZUM SUPPORT/BEWERBUNGS-SCREEN LEITEN
-                    if (confirm("Login fehlgeschlagen: Betriebs-ID oder 2FA-Code ungültig.\n\nMöchten Sie Hilfe vom Support anfordern oder sich als Lizenzpartner bewerben?")) {
-                        toggleSupportView(true);
+                    if (confirm("Login fehlgeschlagen. Möchten Sie sich über Discord an unseren Support oder die Lizenzvergabe wenden?")) {
+                        redirectToDiscord("Fehlgeschlagener Login Support");
                     }
                 }
             }
+        }
+
+        function redirectToDiscord(reason) {
+            // Leitet direkt zum Discord-Server weiter
+            window.open(DISCORD_INVITE_URL, '_blank');
         }
     </script>
 </body>
