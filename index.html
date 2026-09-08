@@ -27,32 +27,64 @@
             width: 100vw;
             overflow: hidden;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             position: relative;
             color: var(--text-main);
         }
 
-        /* ZENTRALES RUNDES HAUPTLOGO MIT NEON-GLOW */
+        /* 1. OBEN: COOLLER SLOGAN / SCHRIFTZUG (Kommt zuerst von oben) */
+        .top-banner {
+            position: absolute;
+            top: 40px;
+            text-align: center;
+            z-index: 10;
+            animation: fadeInDown 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .top-banner h1 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #ffffff 30%, var(--bth-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            text-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
+        }
+
+        .top-banner p {
+            font-size: 0.85rem;
+            color: var(--bth-cyan);
+            letter-spacing: 3px;
+            margin-top: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+            opacity: 0.8;
+        }
+
+        /* 2. ZENTRUM: DEUTLICH GRÖSSERES RUNDES HAUPTLOGO */
         .hero-center {
             position: relative;
-            width: 580px;
-            height: 580px;
-            max-width: 85vw;
-            max-height: 85vw;
+            width: 720px; /* Nochmals deutlich vergrößert */
+            height: 720px;
+            max-width: 82vh;
+            max-height: 82vh;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 90px rgba(2, 132, 199, 0.45), 0 0 35px rgba(56, 189, 248, 0.25);
+            box-shadow: 0 0 120px rgba(2, 132, 199, 0.5), 0 0 45px rgba(56, 189, 248, 0.3);
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
             background: #000;
+            animation: zoomIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .hero-center:hover {
             transform: scale(1.02);
-            box-shadow: 0 0 110px rgba(2, 132, 199, 0.6), 0 0 45px rgba(56, 189, 248, 0.35);
+            box-shadow: 0 0 140px rgba(2, 132, 199, 0.65), 0 0 55px rgba(56, 189, 248, 0.4);
         }
 
         .hero-img {
@@ -62,31 +94,33 @@
             border-radius: 50%;
         }
 
-        /* LINKER SEITEN-BUTTON (VERTIKAL) */
+        /* 3. LINKER LOGIN-BUTTON (Blendet sich nach 2 Sekunden verzögert ein) */
         .btn-left {
             position: absolute;
-            left: 25px;
+            left: 30px;
             top: 50%;
             transform: translateY(-50%);
-            padding: 26px 14px;
+            padding: 28px 16px;
             font-weight: 800;
-            font-size: 0.95rem;
-            letter-spacing: 4px;
+            font-size: 1rem;
+            letter-spacing: 5px;
             writing-mode: vertical-rl;
             text-orientation: upright;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 10;
+            z-index: 20;
             background: linear-gradient(180deg, #10b981 0%, #059669 100%);
             color: #000;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+            opacity: 0; /* Startet unsichtbar */
+            animation: fadeInLeft 0.8s ease forwards 2s; /* 2 Sekunden Delay! */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .btn-left:hover {
-            box-shadow: 0 0 35px rgba(16, 185, 129, 0.85);
-            transform: translateY(-50%) scale(1.06);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.9);
+            transform: translateY(-50%) scale(1.08) !important;
         }
 
         /* POPUP MODAL (LOGIN FORMULAR) */
@@ -96,8 +130,8 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(5, 11, 20, 0.85);
-            backdrop-filter: blur(12px);
+            background: rgba(5, 11, 20, 0.88);
+            backdrop-filter: blur(14px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -247,14 +281,54 @@
             font-size: 1rem;
             cursor: pointer;
         }
+
+        /* KEYFRAME ANIMATIONEN */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.85);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) translateX(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN BUTTON -->
+    <!-- 1. OBEN EINLAUFENDER SCHRIFTZUG -->
+    <div class="top-banner">
+        <h1>BTH PLANWERK</h1>
+        <p>Professionelle Bewässerungsplanung & Hydraulik</p>
+    </div>
+
+    <!-- 2. NACH 2 SEKUNDEN EINBLENDENDER LOGIN-BUTTON (LINKS) -->
     <button class="btn-left" onclick="toggleModal(true)">LOGIN</button>
 
-    <!-- RUNDES HAUPTMOTIV -->
+    <!-- 3. GROSSES RUNDES HAUPTMOTIV (ZENTRUM) -->
     <div class="hero-center">
         <img src="./BTH.png" alt="BTH PLANWERK" class="hero-img">
     </div>
