@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTH PLANWERK - Startportal</title>
+    <title>BTH PLANWERK - Portal</title>
     <style>
         :root {
-            --bth-blue-dark: #070d19;
-            --bth-blue-card: #0f172a;
+            --bth-blue-dark: #050b14;
+            --bth-cyan: #38bdf8;
             --bth-blue-primary: #0284c7;
             --bth-blue-hover: #0369a1;
-            --bth-cyan: #38bdf8;
+            --border-color: #1e293b;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --border-color: #1e293b;
         }
 
         * {
@@ -24,102 +23,192 @@
         }
 
         body {
-            background: radial-gradient(circle at center, #0f172a 0%, #070d19 100%);
-            min-height: 100vh;
+            background-color: var(--bth-blue-dark);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            position: relative;
             color: var(--text-main);
-            overflow-x: hidden;
-            padding: 20px;
         }
 
-        /* 1. HAUPTLOGO IM ZENTRUM / FOKUS */
-        .hero-logo-container {
-            text-align: center;
-            margin-bottom: 25px;
-            animation: heroFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        /* 1. ZENTRALES MOTIV / LOGO MIT GLOW-EFFEKT */
+        .hero-center {
+            position: relative;
+            max-width: 650px;
+            width: 85%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 16px;
+            /* Der blaue Neon-Glow um das Bild rum */
+            box-shadow: 0 0 80px rgba(2, 132, 199, 0.4), 0 0 30px rgba(56, 189, 248, 0.2);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .hero-logo-img {
-            max-width: 420px;
-            width: 90%;
-            height: auto;
-            filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.35));
-            transition: transform 0.3s ease;
+        .hero-center:hover {
+            transform: scale(1.01);
+            box-shadow: 0 0 100px rgba(2, 132, 199, 0.55), 0 0 40px rgba(56, 189, 248, 0.3);
         }
 
-        .hero-logo-img:hover {
-            transform: scale(1.02);
+        .hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 16px;
         }
 
-        /* FALLBACK TEXT-LOGO (Falls bth.png noch geladen wird) */
-        .logo-fallback {
-            font-size: 2.2rem;
+        .hero-fallback {
+            font-size: 3rem;
             font-weight: 900;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #fff 30%, var(--bth-cyan) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-subtitle {
-            font-size: 0.8rem;
             color: var(--bth-cyan);
-            font-weight: 700;
-            letter-spacing: 3px;
-            margin-top: 8px;
-            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-align: center;
         }
 
-        /* 2. DYNAMISCHE CARD / PORTAL */
+        /* 2. SEITLICHE BUTTONS (SEITENLEISTEN) */
+        .side-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 24px 12px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        /* LOGIN BUTTON LINKS */
+        .btn-left {
+            left: 20px;
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            color: #000;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-left:hover {
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.8);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        /* RECHTE SEITENBUTTONS */
+        .side-group-right {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .btn-right-1 {
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            color: #000;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-right-2 {
+            background: linear-gradient(180deg, #06b6d4 0%, #0891b2 100%);
+            color: #000;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+
+        /* 3. MODAL / OVERLAY LOGIN FORMULAR */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 11, 20, 0.85);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
         .portal-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            background: #0f172a;
+            border: 1px solid rgba(56, 189, 248, 0.3);
             border-radius: 20px;
             width: 100%;
-            max-width: 480px;
-            padding: 28px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-            animation: cardSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
-            opacity: 0;
+            max-width: 460px;
+            padding: 32px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* NAVIGATION TABS (Kunde vs. Mitarbeiter) */
+        .modal-overlay.open .portal-card {
+            transform: scale(1);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        /* TABS & FORMULAR */
         .portal-tabs {
             display: flex;
-            background: #070d19;
+            background: #050b14;
             padding: 4px;
-            border-radius: 12px;
-            margin-bottom: 22px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             border: 1px solid var(--border-color);
         }
 
         .tab-btn {
             flex: 1;
-            padding: 12px;
+            padding: 10px;
             border: none;
             background: transparent;
             color: var(--text-muted);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             border-radius: 8px;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
         }
 
         .tab-btn.active {
             background: var(--bth-blue-primary);
             color: #fff;
-            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
         }
 
-        /* ANSICHTEN SWITCH */
         .portal-view {
             display: none;
-            animation: fadeIn 0.3s ease;
         }
 
         .portal-view.active {
@@ -129,74 +218,32 @@
         .instruction {
             font-size: 0.85rem;
             color: var(--text-muted);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
-        /* PARTNER KACHELN */
         .partner-grid {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .partner-card {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 12px 16px;
-            background: #070d19;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #050b14;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .partner-card:hover {
-            border-color: var(--bth-cyan);
-            transform: translateX(4px);
-            background: #0f172a;
         }
 
         .partner-card.active {
             border-color: var(--bth-cyan);
             background: rgba(2, 132, 199, 0.15);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
         }
 
-        .partner-icon {
-            font-size: 1.4rem;
-            background: #1e293b;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-        }
-
-        .partner-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .partner-info strong {
-            font-size: 0.95rem;
-            color: #fff;
-        }
-
-        .partner-badge {
-            font-size: 0.7rem;
-            color: var(--bth-cyan);
-            font-weight: bold;
-        }
-
-        .partner-sub {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-
-        /* FORMULAR FELDER */
         .form-group {
             display: flex;
             flex-direction: column;
@@ -213,13 +260,11 @@
         input {
             width: 100%;
             padding: 12px;
-            background: #070d19;
+            background: #050b14;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             color: #fff;
-            font-size: 0.95rem;
             outline: none;
-            transition: border 0.2s;
         }
 
         input:focus {
@@ -236,118 +281,96 @@
             font-weight: bold;
             font-size: 1rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
-        }
-
-        .btn-primary:hover {
-            background: var(--bth-blue-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-pro {
-            background: linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%);
-        }
-
-        /* ANIMATION KEYFRAMES */
-        @keyframes heroFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        @keyframes cardSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. ZENTRALES HAUPTLOGO -->
-    <div class="hero-logo-container">
+    <!-- LINKER VERTIKALER LOGIN BUTTON -->
+    <button class="side-btn btn-left" onclick="toggleModal(true)">LOGIN</button>
 
-    <img src="./bth.png" alt="BTH PLANWERK Logo" class="hero-logo-img" onerror="this.style.display='none'; document.getElementById('alt-logo').style.display='block';">
-        <div id="alt-logo" class="logo-fallback" style="display: none;">BTH PLANWERK</div>
-        <p class="hero-subtitle">Professionelle Bewässerungsplanung</p>
+    <!-- RECHTE SEITENBUTTONS (OPTIONAL) -->
+    <div class="side-group-right">
+        <button class="side-btn btn-right-1">PARTNER</button>
+        <button class="side-btn btn-right-2">INFO</button>
     </div>
 
-    <!-- 2. PORTAL CARD (MIT TAB-WECHSEL) -->
-    <div class="portal-card">
-        
-        <div class="portal-tabs">
-            <button id="tab-client" class="tab-btn active" onclick="switchTab('client')">Kunden-Zugang</button>
-            <button id="tab-staff" class="tab-btn" onclick="switchTab('staff')">Mitarbeiter-Login</button>
-        </div>
+    <!-- ZENTRALES MOTIV MIT GLOW -->
+    <div class="hero-center">
+        <img src="./bth.png" alt="BTH PLANWERK" class="hero-img" onerror="this.style.display='none'; document.getElementById('hero-text').style.display='block';">
+        <div id="hero-text" class="hero-fallback" style="display: none;">BTH PLANWERK</div>
+    </div>
 
-        <!-- TAB 1: KUNDEN-ZUGANG -->
-        <div id="view-client" class="portal-view active">
-            <p class="instruction">Wählen Sie Ihren zertifizierten Partnerbetrieb:</p>
+    <!-- MODAL POPUP FOR FORMULAR -->
+    <div id="login-modal" class="modal-overlay">
+        <div class="portal-card">
+            <button class="close-btn" onclick="toggleModal(false)">&times;</button>
             
-            <div class="partner-grid">
-                <div class="partner-card active" onclick="selectPartner(this, 'bth')">
-                    <div class="partner-icon">🌊</div>
-                    <div class="partner-info">
-                        <strong>BTH Hamburg</strong>
-                        <span class="partner-badge">Hauptzentrale</span>
+            <div class="portal-tabs">
+                <button id="tab-client" class="tab-btn active" onclick="switchTab('client')">Kunden-Zugang</button>
+                <button id="tab-staff" class="tab-btn" onclick="switchTab('staff')">Mitarbeiter-Login</button>
+            </div>
+
+            <!-- KUNDEN ZUGANG -->
+            <div id="view-client" class="portal-view active">
+                <p class="instruction">Wählen Sie Ihren Partnerbetrieb:</p>
+                
+                <div class="partner-grid">
+                    <div class="partner-card active" onclick="selectPartner(this, 'bth')">
+                        <span>🌊</span>
+                        <div>
+                            <strong>BTH Hamburg</strong>
+                        </div>
+                    </div>
+
+                    <div class="partner-card" onclick="selectPartner(this, 'gartenfit')">
+                        <span>🌱</span>
+                        <div>
+                            <strong>Firma Gartenfit</strong>
+                        </div>
                     </div>
                 </div>
 
-                <div class="partner-card" onclick="selectPartner(this, 'gartenfit')">
-                    <div class="partner-icon">🌱</div>
-                    <div class="partner-info">
-                        <strong>Firma Gartenfit</strong>
-                        <span class="partner-sub">Exklusiv-Partner</span>
-                    </div>
+                <input type="hidden" id="selected-partner" value="bth">
+
+                <div class="form-group">
+                    <label>Ihr persönlicher Planungscode</label>
+                    <input type="text" id="client-code" placeholder="z. B. BTH-8942-X" style="text-transform: uppercase;">
                 </div>
+
+                <button class="btn-primary" onclick="startClientSession()">Planung freischalten ➔</button>
             </div>
 
-            <input type="hidden" id="selected-partner" value="bth">
+            <!-- MITARBEITER LOGIN -->
+            <div id="view-staff" class="portal-view">
+                <p class="instruction">Interner Zugang für Profi-Planung:</p>
 
-            <div class="form-group">
-                <label>Ihr persönlicher Planungscode</label>
-                <input type="text" id="client-code" placeholder="z. B. BTH-8942-X" style="text-transform: uppercase;">
+                <div class="form-group">
+                    <label>Benutzername / E-Mail</label>
+                    <input type="text" id="staff-user" placeholder="mitarbeiter@bth.de">
+                </div>
+
+                <div class="form-group">
+                    <label>Passwort</label>
+                    <input type="password" id="staff-pass" placeholder="••••••••">
+                </div>
+
+                <button class="btn-primary" onclick="startStaffSession()">Profi-CAD Öffnen 🔐</button>
             </div>
 
-            <button class="btn-primary" onclick="startClientSession()">Planung freischalten ➔</button>
         </div>
-
-        <!-- TAB 2: MITARBEITER-LOGIN -->
-        <div id="view-staff" class="portal-view">
-            <p class="instruction">Interner Zugang für Profi-Planung & Hydraulik:</p>
-
-            <div class="form-group">
-                <label>Benutzername / E-Mail</label>
-                <input type="text" id="staff-user" placeholder="mitarbeiter@bth.de">
-            </div>
-
-            <div class="form-group">
-                <label>Passwort</label>
-                <input type="password" id="staff-pass" placeholder="••••••••">
-            </div>
-
-            <button class="btn-primary btn-pro" onclick="startStaffSession()">Profi-CAD Öffnen 🔐</button>
-        </div>
-
     </div>
 
     <script>
+        function toggleModal(show) {
+            const modal = document.getElementById('login-modal');
+            if (show) {
+                modal.classList.add('open');
+            } else {
+                modal.classList.remove('open');
+            }
+        }
+
         function switchTab(type) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.portal-view').forEach(view => view.classList.remove('active'));
