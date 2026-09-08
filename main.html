@@ -17,363 +17,60 @@
             --accent-red: #ef4444;
             --accent-purple: #a855f7;
             --accent-yellow: #f59e0b;
-            --accent-gray: #64748b;
+            --accent-orange: #f97316;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bth-blue-dark); color: var(--text-main); height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
+        
+        header { height: 60px; background: #09101d; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 24px; z-index: 10; }
+        .logo-container h1 { font-size: 1.2rem; font-weight: 900; letter-spacing: 2px; background: linear-gradient(135deg, #ffffff 30%, var(--bth-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .user-info { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 15px; }
+        .badge-mode { background: rgba(56, 189, 248, 0.15); color: var(--bth-cyan); border: 1px solid var(--bth-cyan); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
 
-        body {
-            background-color: var(--bth-blue-dark);
-            color: var(--text-main);
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+        .app-container { display: flex; flex: 1; height: calc(100vh - 60px); position: relative; }
+        sidebar { width: 340px; background: var(--bth-card-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; padding: 16px; overflow-y: auto; z-index: 5; }
 
-        header {
-            height: 60px;
-            background: #09101d;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 24px;
-            z-index: 10;
-        }
+        .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--bth-cyan); font-weight: 800; margin-top: 8px; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
+        .tool-group { display: flex; flex-direction: column; gap: 6px; }
 
-        .logo-container h1 {
-            font-size: 1.2rem;
-            font-weight: 900;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #ffffff 30%, var(--bth-cyan) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .tool-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #050b14; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-align: left; }
+        .tool-btn:hover:not(.locked) { border-color: var(--bth-cyan); background: rgba(2, 132, 199, 0.1); }
+        .tool-btn.edit-mode-active { border-color: var(--accent-yellow); background: rgba(245, 158, 11, 0.2); color: var(--accent-yellow); }
+        .tool-btn.locked { opacity: 0.35; cursor: not-allowed; border-color: rgba(255, 255, 255, 0.05); }
+        .tool-btn.locked::after { content: '🔒'; margin-left: auto; font-size: 0.75rem; }
 
-        .user-info {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .step-next-btn { padding: 8px; background: rgba(56, 189, 248, 0.15); border: 1px dashed var(--bth-cyan); color: var(--bth-cyan); border-radius: 8px; font-size: 0.78rem; font-weight: bold; cursor: pointer; text-align: center; margin-top: 4px; }
+        .step-next-btn:hover { background: rgba(56, 189, 248, 0.3); }
 
-        .badge-mode {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--bth-cyan);
-            border: 1px solid var(--bth-cyan);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
+        .viewport { flex: 1; background: #050b14; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        #map-canvas { background-color: #08101e; box-shadow: 0 0 50px rgba(0,0,0,0.8); cursor: crosshair; }
 
-        .app-container {
-            display: flex;
-            flex: 1;
-            height: calc(100vh - 60px);
-            position: relative;
-        }
-
-        sidebar {
-            width: 320px;
-            background: var(--bth-card-bg);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding: 16px;
-            overflow-y: auto;
-            z-index: 5;
-        }
-
-        .section-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--bth-cyan);
-            font-weight: 800;
-            margin-top: 6px;
-            margin-bottom: 2px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .tool-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .tool-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            background: #050b14;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-main);
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: left;
-        }
-
-        .tool-btn:hover:not(.locked) {
-            border-color: var(--bth-cyan);
-            background: rgba(2, 132, 199, 0.1);
-        }
-
-        .tool-btn.edit-mode-active {
-            border-color: var(--accent-yellow);
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--accent-yellow);
-        }
-
-        .tool-btn.locked {
-            opacity: 0.35;
-            cursor: not-allowed;
-            filter: grayscale(0.8);
-            border-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .tool-btn.locked::after {
-            content: '🔒';
-            margin-left: auto;
-            font-size: 0.75rem;
-        }
-
-        .step-next-btn {
-            padding: 8px;
-            background: rgba(56, 189, 248, 0.15);
-            border: 1px dashed var(--bth-cyan);
-            color: var(--bth-cyan);
-            border-radius: 8px;
-            font-size: 0.78rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            margin-top: 4px;
-        }
-
-        .step-next-btn:hover {
-            background: rgba(56, 189, 248, 0.3);
-        }
-
-        .viewport {
-            flex: 1;
-            background: #050b14;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #map-canvas {
-            background-color: #08101e;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            cursor: crosshair;
-        }
-
-        .action-banner {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--bth-cyan);
-            border-radius: 30px;
-            padding: 10px 24px;
-            display: none;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.88rem;
-            color: #fff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 20;
-        }
-
+        .action-banner { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); border: 1px solid var(--bth-cyan); border-radius: 30px; padding: 10px 24px; display: none; align-items: center; gap: 15px; font-size: 0.88rem; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 20; }
         .action-banner.active { display: flex; }
+        .btn-banner-action { padding: 6px 14px; background: var(--bth-blue-primary); border: none; border-radius: 15px; color: #fff; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+        .btn-banner-cancel { padding: 6px 14px; background: #334155; border: none; border-radius: 15px; color: #fff; font-size: 0.8rem; cursor: pointer; }
 
-        .btn-banner-action {
-            padding: 6px 14px;
-            background: var(--bth-blue-primary);
-            border: none;
-            border-radius: 15px;
-            color: #fff;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .hud-controls { position: absolute; bottom: 20px; right: 20px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid var(--border-color); border-radius: 12px; padding: 8px 16px; display: flex; gap: 12px; align-items: center; font-size: 0.8rem; color: var(--text-muted); z-index: 10; }
+        .hud-btn { background: #1e293b; border: 1px solid var(--border-color); color: #fff; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+        .hud-btn.active { background: var(--bth-blue-primary); border-color: var(--bth-cyan); }
 
-        .btn-banner-cancel {
-            padding: 6px 14px;
-            background: #334155;
-            border: none;
-            border-radius: 15px;
-            color: #fff;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 11, 20, 0.88); backdrop-filter: blur(12px); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 1; transition: opacity 0.3s ease; }
+        .modal-overlay.hidden { opacity: 0; pointer-events: none; }
+        .modal-card { background: var(--bth-card-bg); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px; width: 100%; max-width: 620px; padding: 30px; box-shadow: 0 25px 60px rgba(0,0,0,0.8); max-height: 90vh; overflow-y: auto; }
+        .modal-card h2 { font-size: 1.3rem; margin-bottom: 10px; background: linear-gradient(135deg, #ffffff 30%, var(--bth-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .modal-card p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
 
-        .hud-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 8px 16px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            z-index: 10;
-        }
+        .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .input-group label { font-size: 0.8rem; color: var(--text-main); display: flex; justify-content: space-between; }
+        .input-group input, .input-group select { padding: 10px 12px; background: #050b14; border: 1px solid var(--border-color); border-radius: 8px; color: #fff; outline: none; font-size: 0.85rem; }
 
-        .hud-btn {
-            background: #1e293b;
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
+        .button-row { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-submit { flex: 2; padding: 12px; background: var(--bth-blue-primary); border: none; border-radius: 10px; color: #fff; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+        .btn-back { flex: 1; padding: 12px; background: #1e293b; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-muted); font-weight: bold; font-size: 0.85rem; cursor: pointer; text-align: center; }
 
-        .hud-btn.active {
-            background: var(--bth-blue-primary);
-            border-color: var(--bth-cyan);
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(5, 11, 20, 0.88);
-            backdrop-filter: blur(12px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .modal-card {
-            background: var(--bth-card-bg);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 20px;
-            width: 100%;
-            max-width: 580px;
-            padding: 30px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
-            position: relative;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-card h2 {
-            font-size: 1.3rem;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #ffffff 30%, var(--bth-cyan) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .modal-card p {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            margin-bottom: 16px;
-            line-height: 1.5;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 14px;
-        }
-
-        .input-group label {
-            font-size: 0.8rem;
-            color: var(--text-main);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .input-group input, .input-group select {
-            padding: 10px 12px;
-            background: #050b14;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: #fff;
-            outline: none;
-            font-size: 0.85rem;
-        }
-
-        .button-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .btn-submit {
-            flex: 2;
-            padding: 12px;
-            background: var(--bth-blue-primary);
-            border: none;
-            border-radius: 10px;
-            color: #fff;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        .btn-back {
-            flex: 1;
-            padding: 12px;
-            background: #1e293b;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-muted);
-            font-weight: bold;
-            font-size: 0.85rem;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .info-box {
-            background: rgba(2, 132, 199, 0.1);
-            border-left: 3px solid var(--bth-cyan);
-            padding: 14px;
-            border-radius: 0 8px 8px 0;
-            font-size: 0.82rem;
-            color: #cbd5e1;
-            margin-bottom: 16px;
-            line-height: 1.5;
-        }
+        .info-box { background: rgba(2, 132, 199, 0.1); border-left: 3px solid var(--bth-cyan); padding: 14px; border-radius: 0 8px 8px 0; font-size: 0.82rem; color: #cbd5e1; margin-bottom: 16px; line-height: 1.5; }
+        .warning-box { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--accent-red); padding: 12px; border-radius: 0 8px 8px 0; font-size: 0.8rem; color: #fca5a5; margin-bottom: 12px; }
     </style>
 </head>
 <body>
@@ -396,68 +93,50 @@
                 <span id="step1-status" style="color: var(--accent-yellow); font-size: 0.7rem;">Aktiv</span>
             </div>
             <div class="tool-group" id="group-step1">
-                <button class="tool-btn" id="btn-upload" onclick="triggerFileUpload()">
-                    <span>🖼️</span> Bild / Plan hochladen
-                </button>
-                <button class="tool-btn" id="btn-scale" onclick="startScaleMeasurement()">
-                    <span>📏</span> Maßstab festlegen
-                </button>
+                <button class="tool-btn" id="btn-upload" onclick="triggerFileUpload()">🖼️ Bild / Plan hochladen</button>
+                <button class="tool-btn" id="btn-scale" onclick="startScaleMeasurement()">📏 Bild-Maßstab eichen</button>
+                <button class="tool-btn" style="border-color: var(--accent-green);" onclick="skipImageAndUseGrid()">📐 Ohne Bild planen (Raster 1m×1m)</button>
             </div>
 
             <!-- SCHRITT 2 -->
             <div class="section-title" style="margin-top: 10px;">
-                2. Zeichnen & Nachbearbeiten
+                2. Flächen & Sonderwasserbau
                 <span id="step2-status" style="color: var(--text-muted); font-size: 0.7rem;">🔒 Gesperrt</span>
             </div>
             <div class="tool-group" id="group-step2">
-                <button class="tool-btn locked" id="btn-grass" onclick="openAreaModal('grass')">
-                    <span>🌱</span> Rasenfläche
-                </button>
-                <button class="tool-btn locked" id="btn-bed" onclick="openAreaModal('bed')">
-                    <span>🌺</span> Beetfläche
-                </button>
-                <button class="tool-btn locked" id="btn-shade" onclick="openAreaModal('shade')">
-                    <span>☁️</span> Schatten / Kronentraufbereich
-                </button>
-                <button class="tool-btn locked" id="btn-obstacle" onclick="openAreaModal('obstacle')">
-                    <span>🚫</span> Sperrfläche
-                </button>
-                <button class="tool-btn locked" id="btn-edit-mode" onclick="toggleEditMode()">
-                    <span>✏️</span> Punkte verschieben / anpassen
-                </button>
-                <button class="tool-btn locked" id="btn-measure-tool" onclick="startFreeMeasurement()">
-                    <span>📐</span> Zwischenstrecke messen
-                </button>
-                <button class="step-next-btn" id="btn-goto-step3" style="display: none;" onclick="setWorkflowStep(3)">
-                    Weiter zu 3. Technische Eckdaten ➔
-                </button>
+                <button class="tool-btn locked" id="btn-house" onclick="openAreaModal('house')">🏠 Gebäude / Haus</button>
+                <button class="tool-btn locked" id="btn-grass" onclick="openAreaModal('grass')">🌱 Rasenfläche</button>
+                <button class="tool-btn locked" id="btn-bed" onclick="openAreaModal('bed')">🌺 Beetfläche</button>
+                <button class="tool-btn locked" id="btn-shade" onclick="openAreaModal('shade')">☁️ Schatten / Traufe</button>
+                <button class="tool-btn locked" id="btn-special" onclick="openSpecialWaterModal()">⛲ Sonderwasserbau & Nebel</button>
+                <button class="tool-btn locked" id="btn-logistics" onclick="openLogisticsModal()">🛠️ Bestehende Logistik & Gefahren</button>
+                <button class="tool-btn locked" id="btn-edit-mode" onclick="toggleEditMode()">✏️ Punkte verschieben / anpassen</button>
+                <button class="tool-btn locked" id="btn-measure-tool" onclick="startFreeMeasurement()">📐 Zwischenstrecke messen</button>
+                
+                <button class="step-next-btn" id="btn-goto-step3" style="display: none;" onclick="setWorkflowStep(3)">Weiter zu 3. Gefälle & Wasser ➔</button>
+                <button class="step-next-btn" style="display: none; border-color: var(--accent-red); color: var(--accent-red);" id="btn-backto-step1" onclick="requestStepBack(1)">← Zurück zu 1. Plan/Maßstab</button>
             </div>
 
             <!-- SCHRITT 3 -->
             <div class="section-title" style="margin-top: 10px;">
-                3. Technische Eckdaten
+                3. Gefälle & Wasser
                 <span id="step3-status" style="color: var(--text-muted); font-size: 0.7rem;">🔒 Gesperrt</span>
             </div>
             <div class="tool-group" id="group-step3">
-                <button class="tool-btn locked" id="btn-water" onclick="openWaterModal()">
-                    <span>💧</span> Wasserquelle (Eimertest)
-                </button>
-                <button class="tool-btn locked" id="btn-height" onclick="openHeightModal()">
-                    <span>⛰️</span> Höhenunterschiede (Gefälle)
-                </button>
-                <button class="step-next-btn" id="btn-backto-step2" style="display: none; border-color: var(--text-muted); color: var(--text-muted);" onclick="setWorkflowStep(2)">
-                    ← Zurück zu 2. Flächen zeichnen
-                </button>
+                <button class="tool-btn locked" id="btn-water" onclick="openWaterModal()">💧 Wasserquelle (Eimertest)</button>
+                <button class="tool-btn locked" id="btn-height" onclick="openHeightModal()">⛰️ Virtuelle Schnur (Nivellierung)</button>
+                <button class="step-next-btn" id="btn-goto-step4" style="display: none;" onclick="openCheckoutCheckModal()">Weiter zu 4. Ausstattungs-Check ➔</button>
+                <button class="step-next-btn" id="btn-backto-step2" style="display: none; border-color: var(--text-muted); color: var(--text-muted);" onclick="setWorkflowStep(2)">← Zurück zu 2. Flächen zeichnen</button>
             </div>
 
             <!-- SCHRITT 4 -->
-            <div class="section-title" style="margin-top: 10px;">4. Profi-Planung</div>
+            <div class="section-title" style="margin-top: 10px;">4. Profi-Auslegung</div>
             <div class="tool-group">
-                <button class="tool-btn locked"><span>🔌</span> Regler & Sprinkler</button>
-                <button class="tool-btn locked"><span>🚰</span> Leitungs-Trassen</button>
+                <button class="tool-btn locked">🔌 Regler & Hydraulik (Auto)</button>
+                <button class="tool-btn locked">🚰 Trassenverlauf</button>
             </div>
 
-            <button class="btn-submit" id="btn-submit-plan" style="margin-top: auto; opacity: 0.5; cursor: not-allowed; background: linear-gradient(180deg, #10b981 0%, #059669 100%);" onclick="submitToPro()">
+            <button class="btn-submit" id="btn-submit-plan" style="margin-top: auto; opacity: 0.5; cursor: not-allowed; background: linear-gradient(180deg, #10b981 0%, #059669 100%);" onclick="openCheckoutCheckModal()">
                 Plan zur Prüfung freigeben ➔
             </button>
         </sidebar>
@@ -474,9 +153,82 @@
 
             <div class="hud-controls">
                 <button class="hud-btn active" id="btn-toggle-grid" onclick="toggleGrid()">🌐 Gitter: An</button>
-                <span>Verschieben: <strong>Mausrad / Rechte Taste</strong></span>
+                <span>Tipp: <strong>Shift halten</strong> = Rechtwinklig zeichnen</span>
                 <span>Zoom: <strong id="zoom-indicator">100%</strong></span>
-                <span>Maßstab: <strong id="scale-indicator">Nicht geicht</strong></span>
+                <span>Maßstab: <strong id="scale-indicator">Standard: 1 Kästchen = 1m</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SONDERWASSERBAU MODAL -->
+    <div id="special-water-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2>⛲ Sonderwasserbau & Spezial-Elemente</h2>
+            <p>Wählen Sie ein Spezial-Element aus, das im Garten eingezeichnet werden soll:</p>
+
+            <div class="input-group">
+                <label>Element-Typ</label>
+                <select id="special-water-type" onchange="updateSpecialWaterInfo()">
+                    <option value="fogging">🌫️ Terrassen-Benebelung (Sommer-Kühlung)</option>
+                    <option value="pots">🪴 Kübel- & Topfpflanzen (Micro-Drip)</option>
+                    <option value="hydrant">🚰 Unterflur-Wassersteckdose (Dauerdruck)</option>
+                    <option value="waterfall">🌊 Wasserspiel / Wasserfall / Teich-Nachspeisung</option>
+                </select>
+            </div>
+
+            <div class="info-box" id="special-water-desc">
+                <strong>Terrassen-Benebelung:</strong> Erzeugt durch Hochdruck-Feinnebel eine spürbare Temperaturreduktion auf der Terrasse. Wird für optimale Hygiene direkt an sauberes Hauswasser angeschlossen.
+            </div>
+
+            <div class="button-row">
+                <button class="btn-back" onclick="closeModal('special-water-modal')">← Zurück</button>
+                <button class="btn-submit" onclick="startPlaceSpecialWater()">Auf Karte einzeichnen ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BESTEHENDE LOGISTIK & GEFAHREN MODAL -->
+    <div id="logistics-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2>🛠️ Bestehende Logistik & Gefahrenpunkte</h2>
+            <p>Erfassen Sie Vor-Ort-Gegebenheiten für die Monteure:</p>
+
+            <div class="input-group">
+                <label>Art des Elements / Gefahrenzone</label>
+                <select id="logistics-type" onchange="updateLogisticsInfo()">
+                    <option value="power_socket">⚡ 230V Stromanschluss / Steckdose</option>
+                    <option value="underground_cable">⚡ Bekannte Stromleitung im Boden</option>
+                    <option value="water_pipe">🚰 Bekannte Wasserleitung im Boden</option>
+                    <option value="no_dig">⚠️ Sensibler Bereich / Tiefbau-Sperrzone (z.B. Haustiergrab)</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="logistics-text-group">
+                <label>Zusätzliche Anmerkung für den Monteur</label>
+                <input type="text" id="logistics-note" placeholder="z. B. Haustiergrab seit 2018 - bitte nicht graben!">
+            </div>
+
+            <div class="info-box" id="logistics-desc">
+                Punkte oder Leitungstrassen helfen dem Installationsteam, Kabelschäden zu vermeiden und den optimalen Anschlussweg zu planen.
+            </div>
+
+            <div class="button-row">
+                <button class="btn-back" onclick="closeModal('logistics-modal')">← Zurück</button>
+                <button class="btn-submit" onclick="startPlaceLogistics()">Auf Karte einzeichnen ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WARNMELDUNG MODAL -->
+    <div id="warning-reset-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2 style="color: var(--accent-red);">⚠️ Achtung: Datenverlust!</h2>
+            <div class="warning-box">
+                Wenn Sie zu Schritt 1 zurückkehren, werden alle bisher eingezeichneten Flächen und Punkte neu angesetzt!
+            </div>
+            <div class="button-row">
+                <button class="btn-back" onclick="closeModal('warning-reset-modal')">Nein, abbrechen</button>
+                <button class="btn-submit" style="background: var(--accent-red);" onclick="confirmResetToStep1()">Ja, zurücksetzen & Schritt 1 öffnen</button>
             </div>
         </div>
     </div>
@@ -500,55 +252,18 @@
         </div>
     </div>
 
-    <!-- FLÄCHEN CONFIG MODAL (BEET, RASEN, SCHATTEN, SPERRFLÄCHE) -->
+    <!-- FLÄCHEN MODAL -->
     <div id="area-modal" class="modal-overlay hidden">
         <div class="modal-card">
             <h2 id="area-modal-title">Fläche konfigurieren</h2>
-            <p id="area-modal-desc">Angaben zur optimalen Auswahl der Bewässerungstechnik:</p>
-
-            <!-- BETRIFFT RASEN UND BEET -->
             <div id="soil-group" class="input-group">
                 <label>Bodenart der Fläche</label>
                 <select id="soil-type">
-                    <option value="sand">Sandiger Boden (hohe Versickerung)</option>
-                    <option value="loam" selected>Lehmiger / Humoser Boden (optimal)</option>
-                    <option value="clay">Tonhaltiger Boden (geringe Aufnahme)</option>
+                    <option value="sand">Sandiger Boden</option>
+                    <option value="loam" selected>Lehmiger Boden</option>
+                    <option value="clay">Tonhaltiger Boden</option>
                 </select>
             </div>
-
-            <!-- EXKLUSIV FÜR BEETFLÄCHEN -->
-            <div id="bed-details-group" style="display: none;">
-                <div class="input-group">
-                    <label>Art der Bepflanzung im Beet</label>
-                    <select id="bed-plant-type">
-                        <option value="groundcover">Bodendecker (dichter Wuchs / flach)</option>
-                        <option value="perennials">Stauden & kleine Sträucher</option>
-                        <option value="veggie">Gemüse- / Nutzgarten (regelmäßige Bodenbearbeitung)</option>
-                        <option value="trees">Großgehölze / Bäume</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Großbäume oder Nachbarbäume (Starke Wurzelzehrer)?</label>
-                    <select id="bed-trees-present">
-                        <option value="none">Keine großen Bäume im unmittelbaren Bereich</option>
-                        <option value="inside">Ja, Bäume innerhalb der Beetfläche vorhanden</option>
-                        <option value="neighbor">Ja, große Nachbarbäume ragen herein / wurzeln mit</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- EXKLUSIV FÜR SCHATTEN / KRONENTRAUFBEREICH -->
-            <div id="shade-details-group" style="display: none;">
-                <div class="input-group">
-                    <label>Art des Bereichs</label>
-                    <select id="shade-type">
-                        <option value="shade">Dauerhafter Schattenbereich (z. B. durch Haus/Mauer)</option>
-                        <option value="tree_crown">Kronentraufbereich von Bäumen (Schatten + Wasserzehrer)</option>
-                    </select>
-                </div>
-            </div>
-
             <div class="button-row">
                 <button class="btn-back" onclick="closeModal('area-modal')">← Zurück</button>
                 <button class="btn-submit" onclick="startDrawingArea()">Fläche jetzt zeichnen ➔</button>
@@ -556,25 +271,17 @@
         </div>
     </div>
 
-    <!-- HÖHENUNTERSCHIEDE MODAL -->
+    <!-- VIRTUELLE SCHNUR MODAL -->
     <div id="height-modal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h2>⛰️ Höhenunterschiede & Gefälle erfassen</h2>
-            <div class="info-box">
-                <strong>Anleitung für eine korrekte Nivellierung:</strong><br>
-                1. Wählen Sie einen gut sichtbaren <strong>Referenzpunkt</strong> im Garten.<br>
-                2. Klemmen Sie dort eine Schnur waagerecht z. B. auf <strong>genau 1,00 m Höhe</strong> fest.<br>
-                3. Messen Sie an verschiedenen Stellen den Abstand von der Schnur bis zum Boden.
-            </div>
-
+            <h2>⛰️ Virtuelle Schnur (Spinnennetz-Gefälle)</h2>
             <div class="input-group">
-                <label>Name des neuen Referenzpunkts</label>
-                <input type="text" id="ref-point-name" placeholder="z. B. Terrassenkante Hintergarten">
+                <label>Höhe der Schnur am Referenzpunkt über Boden (cm)</label>
+                <input type="number" id="ref-point-height" value="100">
             </div>
-
             <div class="button-row">
                 <button class="btn-back" onclick="closeModal('height-modal')">← Zurück</button>
-                <button class="btn-submit" onclick="addReferencePointAndStart()">Referenzpunkt auf Karte setzen ➔</button>
+                <button class="btn-submit" onclick="startStringLeveling()">Referenzpunkt auf Karte setzen ➔</button>
             </div>
         </div>
     </div>
@@ -583,26 +290,44 @@
     <div id="water-modal" class="modal-overlay hidden">
         <div class="modal-card">
             <h2>💧 Wasserquelle & Eimertest</h2>
-            <p>Erfassung der verfügbaren Wassermenge:</p>
-
-            <div class="input-group">
-                <label>Art der Wasserquelle</label>
-                <input type="text" id="water-source" placeholder="z. B. Außenzapfstelle, Brunnen">
-            </div>
-
             <div class="input-group">
                 <label>Füllzeit 10-Liter-Eimer (in Sekunden) *</label>
                 <input type="number" id="water-bucket-seconds" placeholder="z. B. 15">
             </div>
-
-            <div class="input-group">
-                <label>Fließdruck in Bar (falls bekannt)</label>
-                <input type="number" id="water-bar" placeholder="z. B. 3.5" step="0.1">
-            </div>
-
             <div class="button-row">
                 <button class="btn-back" onclick="closeModal('water-modal')">← Zurück</button>
                 <button class="btn-submit" onclick="saveWaterData()">Werte speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUSSTATTUNGS-CHECK MODAL (SCHRITT 4) -->
+    <div id="checkout-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2>📋 Ausstattungs- & Technik-Check</h2>
+            <div class="input-group">
+                <label>Steuerungstyp – Ihre Präferenz</label>
+                <select id="ctrl-wifi-pref">
+                    <option value="fav">WLAN / App-Steuerung (Bevorzugt ⭐)</option>
+                    <option value="ok">WLAN / App-Steuerung (Möglich)</option>
+                    <option value="no">WLAN / App-Steuerung (Nicht gewünscht)</option>
+                </select>
+                <select id="ctrl-bt-pref" style="margin-top: 4px;">
+                    <option value="ok" selected>Bluetooth-Steuerung (Möglich)</option>
+                    <option value="fav">Bluetooth-Steuerung (Bevorzugt ⭐)</option>
+                    <option value="no">Bluetooth-Steuerung (Nicht gewünscht)</option>
+                </select>
+                <select id="ctrl-analog-pref" style="margin-top: 4px;">
+                    <option value="ok">Klassisch / Analog an der Wand (Möglich)</option>
+                    <option value="fav">Klassisch / Analog an der Wand (Bevorzugt ⭐)</option>
+                    <option value="no" selected>Klassisch / Analog (Nicht gewünscht)</option>
+                </select>
+            </div>
+            <div class="button-row">
+                <button class="btn-back" onclick="closeModal('checkout-modal')">← Zurück</button>
+                <button class="btn-submit" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%);" onclick="submitToDiscord()">
+                    Plan jetzt zur Prüfung freigeben ➔
+                </button>
             </div>
         </div>
     </div>
@@ -613,44 +338,55 @@
 
         let bgImage = null;
         let zoomLevel = 1.0;
-        let panX = 0;
-        let panY = 0;
-        let isPanning = false;
-        let startPanX = 0;
-        let startPanY = 0;
+        let panX = 0, panY = 0;
+        let isPanning = false, startPanX = 0, startPanY = 0;
 
         let showGrid = true;
-        let pixelsPerMeter = 0;
+        let pixelsPerMeter = 50; // Standardmäßig 50px = 1m Raster
         let currentStep = 1;
-
         let currentMode = null;
         let currentAreaType = '';
+
+        let isShiftPressed = false;
+        let currentMousePos = null;
 
         let measurePoints = [];
         let freeMeasurePoints = [];
         let currentPolygon = [];
         let savedPolygons = [];
-        let referencePoints = [];
+        
+        let specialWaterElements = [];
+        let logisticsElements = [];
 
-        let draggedPointInfo = null;
+        let refPoint = null;
+        let stringPoints = [];
+
+        window.addEventListener('keydown', (e) => { if (e.key === 'Shift') { isShiftPressed = true; drawCanvas(); } });
+        window.addEventListener('keyup', (e) => { if (e.key === 'Shift') { isShiftPressed = false; drawCanvas(); } });
+
+        function skipImageAndUseGrid() {
+            bgImage = null;
+            pixelsPerMeter = 50; // Standard: 50 Pixel entsprechen 1 Meter
+            document.getElementById('scale-indicator').innerText = "Standard: 1 Kästchen = 1,00 m";
+            setWorkflowStep(2);
+        }
 
         function setWorkflowStep(step) {
             currentStep = step;
-
             document.getElementById('step1-status').innerText = step === 1 ? 'Aktiv' : '✔ Abgeschlossen';
             document.getElementById('step1-status').style.color = step === 1 ? 'var(--accent-yellow)' : 'var(--accent-green)';
-
             document.getElementById('step2-status').innerText = step === 2 ? 'Aktiv' : (step > 2 ? '✔ Abgeschlossen' : '🔒 Gesperrt');
             document.getElementById('step2-status').style.color = step === 2 ? 'var(--accent-yellow)' : (step > 2 ? 'var(--accent-green)' : 'var(--text-muted)');
-
-            document.getElementById('step3-status').innerText = step === 3 ? 'Aktiv' : '🔒 Gesperrt';
-            document.getElementById('step3-status').style.color = step === 3 ? 'var(--accent-yellow)' : 'var(--text-muted)';
+            document.getElementById('step3-status').innerText = step === 3 ? 'Aktiv' : (step > 3 ? '✔ Abgeschlossen' : '🔒 Gesperrt');
+            document.getElementById('step3-status').style.color = step === 3 ? 'var(--accent-yellow)' : (step > 3 ? 'var(--accent-green)' : 'var(--text-muted)');
 
             toggleGroupLock('group-step1', step !== 1);
             toggleGroupLock('group-step2', step !== 2);
             toggleGroupLock('group-step3', step !== 3);
 
             document.getElementById('btn-goto-step3').style.display = step === 2 ? 'block' : 'none';
+            document.getElementById('btn-backto-step1').style.display = step === 2 ? 'block' : 'none';
+            document.getElementById('btn-goto-step4').style.display = step === 3 ? 'block' : 'none';
             document.getElementById('btn-backto-step2').style.display = step === 3 ? 'block' : 'none';
 
             const submitBtn = document.getElementById('btn-submit-plan');
@@ -661,266 +397,248 @@
                 submitBtn.style.opacity = '0.5';
                 submitBtn.style.cursor = 'not-allowed';
             }
-
             cancelCurrentAction();
+        }
+
+        function requestStepBack(targetStep) {
+            if (currentStep > 1 && targetStep === 1) document.getElementById('warning-reset-modal').classList.remove('hidden');
+            else setWorkflowStep(targetStep);
+        }
+
+        function confirmResetToStep1() {
+            savedPolygons = []; specialWaterElements = []; logisticsElements = []; refPoint = null; stringPoints = [];
+            closeModal('warning-reset-modal');
+            setWorkflowStep(1);
         }
 
         function toggleGroupLock(groupId, lock) {
             const group = document.getElementById(groupId);
-            const buttons = group.querySelectorAll('.tool-btn');
-            buttons.forEach(btn => {
-                if (lock) btn.classList.add('locked');
-                else btn.classList.remove('locked');
-            });
+            group.querySelectorAll('.tool-btn').forEach(btn => lock ? btn.classList.add('locked') : btn.classList.remove('locked'));
         }
 
         function drawCanvas() {
             ctx.save();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             ctx.translate(panX, panY);
             ctx.scale(zoomLevel, zoomLevel);
 
-            if (bgImage) {
-                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
-            } else {
-                ctx.fillStyle = '#08101e';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
+            if (bgImage) ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+            else { ctx.fillStyle = '#08101e'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
             if (showGrid) {
-                const gridSizeSmall = 10;
                 const gridSizeLarge = pixelsPerMeter > 0 ? pixelsPerMeter : 50;
+                const gridSizeSmall = gridSizeLarge / 5;
 
                 ctx.beginPath();
                 ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
                 ctx.lineWidth = 0.5 / zoomLevel;
-                for (let x = 0; x < canvas.width; x += gridSizeSmall) {
-                    ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height);
-                }
-                for (let y = 0; y < canvas.height; y += gridSizeSmall) {
-                    ctx.moveTo(0, y); ctx.lineTo(canvas.width, y);
-                }
+                for (let x = 0; x < canvas.width; x += gridSizeSmall) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
+                for (let y = 0; y < canvas.height; y += gridSizeSmall) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
                 ctx.stroke();
 
                 ctx.beginPath();
                 ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
                 ctx.lineWidth = 1 / zoomLevel;
-                for (let x = 0; x < canvas.width; x += gridSizeLarge) {
-                    ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height);
-                }
-                for (let y = 0; y < canvas.height; y += gridSizeLarge) {
-                    ctx.moveTo(0, y); ctx.lineTo(canvas.width, y);
-                }
+                for (let x = 0; x < canvas.width; x += gridSizeLarge) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
+                for (let y = 0; y < canvas.height; y += gridSizeLarge) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
                 ctx.stroke();
+
+                // Meter-Beschriftung im Raster
+                if (!bgImage && zoomLevel > 0.8) {
+                    ctx.font = `${10 / zoomLevel}px sans-serif`;
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+                    for (let x = gridSizeLarge; x < canvas.width; x += gridSizeLarge * 2) {
+                        ctx.fillText(`${Math.round(x / gridSizeLarge)}m`, x + 2, 12 / zoomLevel);
+                    }
+                }
             }
 
-            savedPolygons.forEach(poly => {
-                drawSinglePolygon(poly.points, poly.type, true, currentMode === 'edit_points');
+            // Flächen zeichnen
+            savedPolygons.forEach(poly => drawSinglePolygon(poly.points, poly.type, true, currentMode === 'edit_points'));
+            
+            // Aktuelles Zeichen-Polygon + Vorschau-Linie
+            if (currentPolygon.length > 0) {
+                let pts = [...currentPolygon];
+                if (currentMousePos && currentMode === 'draw_area') {
+                    let nextPt = isShiftPressed ? applySnapOrthogonal(pts[pts.length - 1], currentMousePos) : currentMousePos;
+                    pts.push(nextPt);
+                }
+                drawSinglePolygon(pts, currentAreaType, false, false);
+            }
+
+            // Sonderwasserbau
+            specialWaterElements.forEach(el => {
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath(); ctx.arc(el.x, el.y, 8 / zoomLevel, 0, Math.PI * 2); ctx.fill();
+                ctx.font = `bold ${11 / zoomLevel}px sans-serif`;
+                ctx.fillText(`⛲ ${el.label}`, el.x + 10, el.y + 4);
             });
 
-            if (currentPolygon.length > 0) {
-                drawSinglePolygon(currentPolygon, currentAreaType, false, false);
-            }
+            // Logistik & Gefahrenpunkte
+            logisticsElements.forEach(el => {
+                ctx.fillStyle = el.type === 'no_dig' ? '#ef4444' : '#f59e0b';
+                ctx.beginPath(); ctx.arc(el.x, el.y, 8 / zoomLevel, 0, Math.PI * 2); ctx.fill();
+                ctx.font = `bold ${11 / zoomLevel}px sans-serif`;
+                ctx.fillText(`${el.icon} ${el.label}`, el.x + 10, el.y + 4);
+            });
 
+            // Messlinien
             drawMeasurementLine(measurePoints, '#ef4444');
             drawMeasurementLine(freeMeasurePoints, '#f59e0b', true);
-
-            referencePoints.forEach(ref => {
-                ctx.fillStyle = '#f59e0b';
-                ctx.beginPath();
-                ctx.arc(ref.x, ref.y, 8 / zoomLevel, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.font = `${12 / zoomLevel}px sans-serif`;
-                ctx.fillText(`🚩 ${ref.name}`, ref.x + 10, ref.y - 10);
-            });
 
             ctx.restore();
             document.getElementById('zoom-indicator').innerText = `${Math.round(zoomLevel * 100)}%`;
         }
 
+        function applySnapOrthogonal(lastPt, currentPt) {
+            const dx = Math.abs(currentPt.x - lastPt.x);
+            const dy = Math.abs(currentPt.y - lastPt.y);
+            return dx > dy ? { x: currentPt.x, y: lastPt.y } : { x: lastPt.x, y: currentPt.y };
+        }
+
         function drawSinglePolygon(points, type, isClosed = true, showEditHandles = false) {
             if (points.length === 0) return;
-
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x, points[i].y);
-            }
-
+            for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
             if (isClosed) ctx.closePath();
 
-            if (type === 'grass') {
-                ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
-                ctx.strokeStyle = '#10b981';
-            } else if (type === 'bed') {
-                ctx.fillStyle = 'rgba(168, 85, 247, 0.35)';
-                ctx.strokeStyle = '#a855f7';
-            } else if (type === 'shade') {
-                ctx.fillStyle = 'rgba(100, 116, 139, 0.45)';
-                ctx.strokeStyle = '#94a3b8';
-            } else if (type === 'obstacle') {
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
-                ctx.strokeStyle = '#ef4444';
-            }
+            if (type === 'house') { ctx.fillStyle = 'rgba(239, 68, 68, 0.4)'; ctx.strokeStyle = '#ef4444'; }
+            else if (type === 'grass') { ctx.fillStyle = 'rgba(16, 185, 129, 0.35)'; ctx.strokeStyle = '#10b981'; }
+            else if (type === 'bed') { ctx.fillStyle = 'rgba(168, 85, 247, 0.35)'; ctx.strokeStyle = '#a855f7'; }
+            else if (type === 'shade') { ctx.fillStyle = 'rgba(100, 116, 139, 0.45)'; ctx.strokeStyle = '#94a3b8'; }
 
             ctx.lineWidth = 2 / zoomLevel;
             if (isClosed) ctx.fill();
             ctx.stroke();
 
             points.forEach(pt => {
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, (showEditHandles ? 7 : 4) / zoomLevel, 0, Math.PI * 2);
-                ctx.fillStyle = showEditHandles ? '#f59e0b' : '#ffffff';
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(pt.x, pt.y, (showEditHandles ? 7 : 4) / zoomLevel, 0, Math.PI * 2);
+                ctx.fillStyle = showEditHandles ? '#f59e0b' : '#ffffff'; ctx.fill();
             });
         }
 
         function drawMeasurementLine(pts, color, showText = false) {
             if (pts.length === 0) return;
-            ctx.strokeStyle = color;
-            ctx.fillStyle = color;
-            ctx.lineWidth = 2 / zoomLevel;
-
-            pts.forEach(pt => {
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, 5 / zoomLevel, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
+            ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2 / zoomLevel;
+            pts.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 5 / zoomLevel, 0, Math.PI * 2); ctx.fill(); });
             if (pts.length === 2) {
-                ctx.beginPath();
-                ctx.moveTo(pts[0].x, pts[0].y);
-                ctx.lineTo(pts[1].x, pts[1].y);
-                ctx.stroke();
-
+                ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[1].x, pts[1].y); ctx.stroke();
                 if (showText && pixelsPerMeter > 0) {
                     const distPx = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
                     const distM = (distPx / pixelsPerMeter).toFixed(2);
-                    const midX = (pts[0].x + pts[1].x) / 2;
-                    const midY = (pts[0].y + pts[1].y) / 2;
-
-                    ctx.font = `bold ${14 / zoomLevel}px sans-serif`;
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillText(`${distM} m`, midX + 10, midY - 10);
+                    ctx.font = `bold ${14 / zoomLevel}px sans-serif`; ctx.fillStyle = '#ffffff';
+                    ctx.fillText(`${distM} m`, (pts[0].x + pts[1].x) / 2 + 10, (pts[0].y + pts[1].y) / 2 - 10);
                 }
             }
         }
 
         function getCanvasCoordinates(e) {
             const rect = canvas.getBoundingClientRect();
-            const clientX = e.clientX - rect.left;
-            const clientY = e.clientY - rect.top;
-            
-            return {
-                x: (clientX - panX) / zoomLevel,
-                y: (clientY - panY) / zoomLevel
-            };
+            return { x: (e.clientX - rect.left - panX) / zoomLevel, y: (e.clientY - rect.top - panY) / zoomLevel };
         }
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-            const newZoom = Math.min(Math.max(0.3, zoomLevel * zoomFactor), 5.0);
-
+            const mouseX = e.clientX - rect.left, mouseY = e.clientY - rect.top;
+            const newZoom = Math.min(Math.max(0.3, zoomLevel * (e.deltaY < 0 ? 1.15 : 0.85)), 10.0); // Bis zu 10x Zoom
             panX = mouseX - (mouseX - panX) * (newZoom / zoomLevel);
             panY = mouseY - (mouseY - panY) * (newZoom / zoomLevel);
             zoomLevel = newZoom;
-
             drawCanvas();
         }, { passive: false });
 
-        // MAUSRAD-KLICK (button === 1) & RECHTE MAUSTASTE (button === 2) ZUM VERSCHIEBEN
         canvas.addEventListener('mousedown', (e) => {
-            if (e.button === 1 || e.button === 2) {
-                isPanning = true;
-                startPanX = e.clientX - panX;
-                startPanY = e.clientY - panY;
-                return;
-            }
-
-            const coords = getCanvasCoordinates(e);
-
-            if (currentMode === 'edit_points') {
-                for (let pIdx = 0; pIdx < savedPolygons.length; pIdx++) {
-                    const poly = savedPolygons[pIdx];
-                    for (let ptIdx = 0; ptIdx < poly.points.length; ptIdx++) {
-                        const pt = poly.points[ptIdx];
-                        if (Math.hypot(pt.x - coords.x, pt.y - coords.y) < 15 / zoomLevel) {
-                            draggedPointInfo = { polyIndex: pIdx, pointIndex: ptIdx };
-                            return;
-                        }
-                    }
-                }
-            }
+            if (e.button === 1 || e.button === 2) { isPanning = true; startPanX = e.clientX - panX; startPanY = e.clientY - panY; return; }
         });
 
         canvas.addEventListener('mousemove', (e) => {
-            if (isPanning) {
-                panX = e.clientX - startPanX;
-                panY = e.clientY - startPanY;
-                drawCanvas();
-                return;
-            }
-
-            if (draggedPointInfo && currentMode === 'edit_points') {
-                const coords = getCanvasCoordinates(e);
-                savedPolygons[draggedPointInfo.polyIndex].points[draggedPointInfo.pointIndex] = coords;
-                drawCanvas();
-            }
+            currentMousePos = getCanvasCoordinates(e);
+            if (isPanning) { panX = e.clientX - startPanX; panY = e.clientY - startPanY; }
+            drawCanvas();
         });
 
-        canvas.addEventListener('mouseup', (e) => {
-            if (e.button === 1 || e.button === 2) isPanning = false;
-            draggedPointInfo = null;
-        });
-
+        canvas.addEventListener('mouseup', (e) => { if (e.button === 1 || e.button === 2) isPanning = false; });
         canvas.addEventListener('contextmenu', e => e.preventDefault());
 
         canvas.addEventListener('click', (e) => {
             if (isPanning) return;
-            const coords = getCanvasCoordinates(e);
+            let coords = getCanvasCoordinates(e);
 
             if (currentMode === 'measure_scale') {
-                measurePoints.push(coords);
-                drawCanvas();
-                if (measurePoints.length === 2) {
-                    document.getElementById('scale-input-modal').classList.remove('hidden');
-                }
+                measurePoints.push(coords); drawCanvas();
+                if (measurePoints.length === 2) document.getElementById('scale-input-modal').classList.remove('hidden');
             } else if (currentMode === 'free_measure') {
                 freeMeasurePoints.push(coords);
                 if (freeMeasurePoints.length > 2) freeMeasurePoints = [coords];
                 drawCanvas();
             } else if (currentMode === 'draw_area') {
-                currentPolygon.push(coords);
-                if (currentPolygon.length >= 3) {
-                    document.getElementById('btn-banner-finish').style.display = 'inline-block';
+                if (isShiftPressed && currentPolygon.length > 0) {
+                    coords = applySnapOrthogonal(currentPolygon[currentPolygon.length - 1], coords);
                 }
+                currentPolygon.push(coords);
+                if (currentPolygon.length >= 3) document.getElementById('btn-banner-finish').style.display = 'inline-block';
                 drawCanvas();
-            } else if (currentMode === 'set_ref_point') {
-                const name = document.getElementById('ref-point-name').value || 'Referenzpunkt';
-                referencePoints.push({ name, x: coords.x, y: coords.y });
-                cancelCurrentAction();
-                alert(`Referenzpunkt '${name}' gesetzt.`);
+            } else if (currentMode === 'place_special_water') {
+                const labelMap = { fogging: 'Terrassen-Benebelung', pots: 'Kübelbewässerung', hydrant: 'Wassersteckdose', waterfall: 'Wasserspiel' };
+                const type = document.getElementById('special-water-type').value;
+                specialWaterElements.push({ x: coords.x, y: coords.y, type, label: labelMap[type] });
+                drawCanvas();
+            } else if (currentMode === 'place_logistics') {
+                const type = document.getElementById('logistics-type').value;
+                const note = document.getElementById('logistics-note').value;
+                const iconMap = { power_socket: '⚡', underground_cable: '⚡', water_pipe: '🚰', no_dig: '⚠️' };
+                const labelMap = { power_socket: '230V Steckdose', underground_cable: 'Kabel im Boden', water_pipe: 'Wasserleitung', no_dig: note || 'Sperrbereich (Nicht graben!)' };
+                logisticsElements.push({ x: coords.x, y: coords.y, type, icon: iconMap[type], label: labelMap[type] });
+                drawCanvas();
             }
         });
 
-        function toggleGrid() {
-            showGrid = !showGrid;
-            const btn = document.getElementById('btn-toggle-grid');
-            btn.innerText = showGrid ? '🌐 Gitter: An' : '🌐 Gitter: Aus';
-            btn.classList.toggle('active', showGrid);
-            drawCanvas();
+        function openSpecialWaterModal() {
+            if (currentStep !== 2) return;
+            document.getElementById('special-water-modal').classList.remove('hidden');
+            updateSpecialWaterInfo();
         }
 
-        function triggerFileUpload() {
-            if (currentStep !== 1) return;
-            document.getElementById('file-input').click();
+        function updateSpecialWaterInfo() {
+            const type = document.getElementById('special-water-type').value;
+            const desc = document.getElementById('special-water-desc');
+            if (type === 'fogging') desc.innerHTML = "<strong>Terrassen-Benebelung:</strong> Erzeugt feinsten Wassernebel zur Abkühlung im Sitzbereich. Wird für maximale Hygiene direkt an das Hauswasser angeschlossen.";
+            else if (type === 'pots') desc.innerHTML = "<strong>Kübel- & Topfpflanzen:</strong> Punktgenaue Versorgung über Einzeltropfer für Kübel auf der Terrasse oder Balkon.";
+            else if (type === 'hydrant') desc.innerHTML = "<strong>Unterflur-Wassersteckdose:</strong> Unterirdischer Anschluss mit Dauer-Wasserdruck – ideal zum Anschließen von Gartenschläuchen.";
+            else if (type === 'waterfall') desc.innerHTML = "<strong>Wasserspiel / Teich:</strong> Automatische Nachspeisung für Teiche, Wasserfälle oder Springbrunnen.";
         }
+
+        function startPlaceSpecialWater() {
+            closeModal('special-water-modal'); cancelCurrentAction();
+            currentMode = 'place_special_water';
+            showBanner("Klicken Sie auf den Plan, um das Spezial-Element zu platzieren.");
+        }
+
+        function openLogisticsModal() {
+            if (currentStep !== 2) return;
+            document.getElementById('logistics-modal').classList.remove('hidden');
+            updateLogisticsInfo();
+        }
+
+        function updateLogisticsInfo() {
+            const type = document.getElementById('logistics-type').value;
+            const desc = document.getElementById('logistics-desc');
+            if (type === 'power_socket') desc.innerHTML = "<strong>Stromanschluss:</strong> Wichtig für die Positionierung von Pumpe oder Steuergerät.";
+            else if (type === 'underground_cable') desc.innerHTML = "<strong>Stromleitung im Boden:</strong> Warnt das Grabungsteam vor bestehenden Erdkabeln.";
+            else if (type === 'water_pipe') desc.innerHTML = "<strong>Wasserleitung:</strong> Zeigt bestehende Druckleitungen auf dem Grundstück.";
+            else if (type === 'no_dig') desc.innerHTML = "<strong>Sperrbereich:</strong> Schützt sensible Stellen (z. B. Haustiergrab, Wurzelzonen oder Altlasten) vor Erdarbeiten.";
+        }
+
+        function startPlaceLogistics() {
+            closeModal('logistics-modal'); cancelCurrentAction();
+            currentMode = 'place_logistics';
+            showBanner("Klicken Sie auf den Plan, um den Logistik- / Gefahrenpunkt einzutragen.");
+        }
+
+        function toggleGrid() { showGrid = !showGrid; drawCanvas(); }
+        function triggerFileUpload() { if (currentStep === 1) document.getElementById('file-input').click(); }
 
         function handleImageUpload(event) {
             const file = event.target.files[0];
@@ -928,10 +646,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     bgImage = new Image();
-                    bgImage.onload = function() {
-                        drawCanvas();
-                        alert("Bild geladen! Legen Sie nun den Maßstab fest.");
-                    };
+                    bgImage.onload = function() { drawCanvas(); alert("Bild geladen! Legen Sie nun den Maßstab fest."); };
                     bgImage.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
@@ -940,153 +655,54 @@
 
         function startScaleMeasurement() {
             if (currentStep !== 1) return;
-            cancelCurrentAction();
-            currentMode = 'measure_scale';
-            measurePoints = [];
+            cancelCurrentAction(); currentMode = 'measure_scale'; measurePoints = [];
             showBanner("Klicken Sie 2 bekannte Punkte auf dem Plan an.");
         }
 
         function saveScaleFromPoints() {
-            const m = parseFloat(document.getElementById('scale-meters').value || 0);
-            const cm = parseFloat(document.getElementById('scale-cm').value || 0);
-            const totalMeters = m + (cm / 100);
-
+            const totalMeters = parseFloat(document.getElementById('scale-meters').value || 0) + (parseFloat(document.getElementById('scale-cm').value || 0) / 100);
             if (totalMeters > 0 && measurePoints.length === 2) {
-                const pixelDist = Math.hypot(measurePoints[1].x - measurePoints[0].x, measurePoints[1].y - measurePoints[0].y);
-                pixelsPerMeter = pixelDist / totalMeters;
+                pixelsPerMeter = Math.hypot(measurePoints[1].x - measurePoints[0].x, measurePoints[1].y - measurePoints[0].y) / totalMeters;
                 document.getElementById('scale-indicator').innerText = `Geicht: 1m = ${Math.round(pixelsPerMeter)}px`;
-                closeModal('scale-input-modal');
-                
-                setWorkflowStep(2);
-                alert("Maßstab gespeichert! Schritt 1 ist nun gesperrt.");
-            } else {
-                alert("Bitte eine gültige Länge eingeben.");
+                closeModal('scale-input-modal'); setWorkflowStep(2);
             }
         }
 
         function openAreaModal(type) {
-            if (currentStep !== 2) return;
-            currentAreaType = type;
-            const modal = document.getElementById('area-modal');
-            const title = document.getElementById('area-modal-title');
-            const soilGrp = document.getElementById('soil-group');
-            const bedGrp = document.getElementById('bed-details-group');
-            const shadeGrp = document.getElementById('shade-details-group');
-
-            modal.classList.remove('hidden');
-
-            // Reset Sub-Gruppen
-            soilGrp.style.display = 'none';
-            bedGrp.style.display = 'none';
-            shadeGrp.style.display = 'none';
-
-            if (type === 'grass') {
-                title.innerText = "🌱 Rasenfläche";
-                soilGrp.style.display = 'flex';
-            } else if (type === 'bed') {
-                title.innerText = "🌺 Beetfläche";
-                soilGrp.style.display = 'flex';
-                bedGrp.style.display = 'block';
-            } else if (type === 'shade') {
-                title.innerText = "☁️ Schatten / Kronentraufbereich";
-                shadeGrp.style.display = 'block';
-            } else if (type === 'obstacle') {
-                title.innerText = "🚫 Sperrfläche";
+            if (currentStep === 2) {
+                currentAreaType = type;
+                if (type === 'house') startDrawingArea(); // Direkt loszeichnen bei Gebäude
+                else document.getElementById('area-modal').classList.remove('hidden');
             }
         }
-
-        function startDrawingArea() {
-            closeModal('area-modal');
-            cancelCurrentAction();
-            currentMode = 'draw_area';
-            currentPolygon = [];
-            showBanner(`Klicken Sie die Eckpunkte der Fläche an.`);
-        }
-
-        function toggleEditMode() {
-            if (currentStep !== 2) return;
-            if (currentMode === 'edit_points') cancelCurrentAction();
-            else {
-                cancelCurrentAction();
-                currentMode = 'edit_points';
-                document.getElementById('btn-edit-mode').classList.add('edit-mode-active');
-                showBanner("✏️ Ziehen Sie die Punkte per Maus auf die gewünschte Position.");
-                drawCanvas();
-            }
-        }
-
-        function startFreeMeasurement() {
-            if (currentStep !== 2) return;
-            cancelCurrentAction();
-            currentMode = 'free_measure';
-            freeMeasurePoints = [];
-            showBanner("Klicken Sie zwei Punkte an, um eine Distanz zu messen.");
-        }
+        function startDrawingArea() { closeModal('area-modal'); cancelCurrentAction(); currentMode = 'draw_area'; currentPolygon = []; showBanner("Klicken Sie die Eckpunkte der Fläche an (Shift = Exakt Rechtwinklig)."); }
+        function toggleEditMode() { if (currentStep === 2) { cancelCurrentAction(); currentMode = 'edit_points'; showBanner("✏️ Ziehen Sie Punkte per Maus."); } }
+        function startFreeMeasurement() { if (currentStep === 2) { cancelCurrentAction(); currentMode = 'free_measure'; freeMeasurePoints = []; showBanner("Klicken Sie zwei Punkte an."); } }
 
         function finishCurrentAction() {
             if (currentMode === 'draw_area' && currentPolygon.length >= 3) {
-                savedPolygons.push({
-                    id: Date.now(),
-                    points: [...currentPolygon],
-                    type: currentAreaType
-                });
+                savedPolygons.push({ id: Date.now(), points: [...currentPolygon], type: currentAreaType });
                 cancelCurrentAction();
             }
         }
 
-        function openHeightModal() {
-            if (currentStep !== 3) return;
-            document.getElementById('height-modal').classList.remove('hidden');
-        }
-
-        function openWaterModal() {
-            if (currentStep !== 3) return;
-            document.getElementById('water-modal').classList.remove('hidden');
-        }
-
-        function addReferencePointAndStart() {
-            const name = document.getElementById('ref-point-name').value;
-            if (!name) return alert("Bitte Namen eingeben.");
-            closeModal('height-modal');
-            cancelCurrentAction();
-            currentMode = 'set_ref_point';
-            showBanner(`Klicken Sie auf den Ort im Garten für '🚩 ${name}'.`);
-        }
-
-        function saveWaterData() {
-            const sec = document.getElementById('water-bucket-seconds').value;
-            if(!sec) return alert("Bitte Sekunden eingeben.");
-            alert(`Wassermenge gespeichert!`);
-            closeModal('water-modal');
-        }
+        function openHeightModal() { if (currentStep === 3) document.getElementById('height-modal').classList.remove('hidden'); }
+        function startStringLeveling() { closeModal('height-modal'); cancelCurrentAction(); currentMode = 'set_string_ref'; showBanner("Setzen Sie den Haupt-Referenzpunkt."); }
+        function openWaterModal() { if (currentStep === 3) document.getElementById('water-modal').classList.remove('hidden'); }
+        function saveWaterData() { closeModal('water-modal'); }
+        function openCheckoutCheckModal() { document.getElementById('checkout-modal').classList.remove('hidden'); }
 
         function cancelCurrentAction() {
-            currentMode = null;
-            measurePoints = [];
-            freeMeasurePoints = [];
-            currentPolygon = [];
-            document.getElementById('btn-edit-mode').classList.remove('edit-mode-active');
-            hideBanner();
-            drawCanvas();
+            currentMode = null; measurePoints = []; freeMeasurePoints = []; currentPolygon = [];
+            hideBanner(); drawCanvas();
         }
 
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function showBanner(text) {
-            document.getElementById('action-banner-text').innerText = text;
-            document.getElementById('action-banner').classList.add('active');
-        }
-        function hideBanner() {
-            document.getElementById('action-banner').classList.remove('active');
-            document.getElementById('btn-banner-finish').style.display = 'none';
-        }
+        function showBanner(text) { document.getElementById('action-banner-text').innerText = text; document.getElementById('action-banner').classList.add('active'); }
+        function hideBanner() { document.getElementById('action-banner').classList.remove('active'); document.getElementById('btn-banner-finish').style.display = 'none'; }
+        function submitToDiscord() { closeModal('checkout-modal'); alert("Planung erfolgreich übermittelt!"); }
 
-        function submitToPro() {
-            if (currentStep !== 3) return;
-            alert("Vielen Dank! Die Daten wurden vollständig für die Profi-Auslegung erfasst.");
-        }
-
-        setWorkflowStep(1);
-        drawCanvas();
+        setWorkflowStep(1); drawCanvas();
     </script>
 </body>
 </html>
