@@ -3,31 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTH PLANWERK - CAD Portal</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="portal-body">
+    <title>BTH PLANWERK - Startportal</title>
+    <style>
+        :root {
+            --bth-blue-dark: #0f172a;
+            --bth-blue-card: #1e293b;
+            --bth-blue-primary: #0284c7;
+            --bth-blue-hover: #0369a1;
+            --bth-cyan: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
 
-    <!-- STARTSCREEN / POPUP MODAL -->
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 60%, #0369a1 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        .portal-overlay {
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .portal-card {
+            background: rgba(30, 41, 59, 0.88);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            padding: 32px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        /* ANIMATION 1: LOGO ROTATION & POP-UP */
+        .bth-logo-img {
+            max-width: 220px;
+            height: auto;
+            display: block;
+            margin: 0 auto 10px auto;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3));
+        }
+
+        .animate-logo {
+            animation: logoIntro 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes logoIntro {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) rotate(-15deg);
+            }
+            70% {
+                transform: scale(1.05) rotate(2deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        /* ANIMATION 2: INHALT GLEITET ZEITVERSETZT EIN */
+        .animate-content {
+            opacity: 0;
+            animation: contentSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+        }
+
+        @keyframes contentSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .brand-sub {
+            font-size: 0.72rem;
+            color: var(--bth-cyan);
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        /* TABS UNTERSCHIED KUNDE / PROFI */
+        .portal-tabs {
+            display: flex;
+            background: #0f172a;
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--bth-blue-primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+        }
+
+        .portal-view {
+            display: none;
+        }
+
+        .portal-view.active {
+            display: block;
+        }
+
+        .instruction {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        /* EXKLUSIVE PARTNER KACHELN */
+        .partner-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .partner-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .partner-card:hover {
+            border-color: var(--bth-cyan);
+            transform: translateX(4px);
+            background: #172554;
+        }
+
+        .partner-card.active {
+            border-color: var(--bth-cyan);
+            background: rgba(2, 132, 199, 0.15);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .partner-icon {
+            font-size: 1.5rem;
+            background: #1e293b;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .partner-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .partner-info strong {
+            font-size: 0.95rem;
+            color: #fff;
+        }
+
+        .partner-badge {
+            font-size: 0.7rem;
+            color: var(--bth-cyan);
+            font-weight: bold;
+        }
+
+        .partner-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* EINGABEN & BUTTONS */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--bth-cyan);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            margin-top: 16px;
+            background: var(--bth-blue-primary);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: var(--bth-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-pro {
+            background: linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%);
+        }
+    </style>
+</head>
+<body>
+
     <div class="portal-overlay">
         <div class="portal-card">
             
             <!-- PHASE 1: ANIMIERTES BTH LOGO -->
-            <div class="brand-header animate-logo">
+            <div class="animate-logo">
                 <img src="bth.png" alt="BTH Planwerk Logo" class="bth-logo-img">
-                <p class="brand-sub">PROFESSIONELLE BEWÄSSERUNGSPLANUNG & BERECHNUNG</p>
+                <p class="brand-sub">PROFESSIONELLE BEWÄSSERUNGSPLANUNG</p>
             </div>
 
-            <!-- PHASE 2: INHALT GLEITET NACH DEM LOGO EIN -->
+            <!-- PHASE 2: CONTENT (VERSCHOBEN NACH OBEN) -->
             <div class="animate-content">
                 
-                <!-- ROLLEN AUSWAHL -->
                 <div class="portal-tabs">
                     <button id="tab-client" class="tab-btn active" onclick="switchTab('client')">Kunden-Zugang</button>
                     <button id="tab-staff" class="tab-btn" onclick="switchTab('staff')">Mitarbeiter / Pro-Login</button>
                 </div>
 
-                <!-- TAB 1: KUNDEN ZUGANG -->
+                <!-- KUNDEN-ANSICHT -->
                 <div id="view-client" class="portal-view active">
                     <p class="instruction">Wählen Sie Ihren zertifizierten Partnerbetrieb:</p>
                     
@@ -59,7 +315,7 @@
                     <button class="btn-primary" onclick="startClientSession()">Planung freischalten ➔</button>
                 </div>
 
-                <!-- TAB 2: MITARBEITER LOGIN -->
+                <!-- MITARBEITER-ANSICHT -->
                 <div id="view-staff" class="portal-view">
                     <p class="instruction">Interner Bereich für Pro-Planung & Hydraulik:</p>
 
@@ -104,11 +360,13 @@
         function startClientSession() {
             const partner = document.getElementById('selected-partner').value;
             const code = document.getElementById('client-code').value;
-            alert(`Starte BTH PLANWERK (Kunde) für [${partner}] mit Code: ${code || 'Demo'}`);
+            // Weiterleitung zum einfachen Zeichen-Editor
+            window.location.href = `editor.html?mode=client&partner=${partner}&code=${code}`;
         }
 
         function startStaffSession() {
-            alert("Erfolgreich eingeloggt! Öffne BTH PLANWERK Pro...");
+            // Hier kommt später dein Login-Check rein. Bei Erfolg weiter zum Profi-CAD:
+            window.location.href = `editor.html?mode=pro`;
         }
     </script>
 </body>
