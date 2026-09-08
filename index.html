@@ -141,14 +141,14 @@
             pointer-events: all;
         }
 
-        /* FESTE GRÖSSE DES CONTAINERS GEGEN SPRINGEN */
+        /* FESTE GRÖSSE DES CONTAINERS */
         .portal-card {
             background: #0f172a;
             border: 1px solid rgba(56, 189, 248, 0.3);
             border-radius: 20px;
             width: 100%;
-            max-width: 500px;
-            height: 480px; /* Feste Höhe fixiert */
+            max-width: 480px;
+            height: 460px;
             padding: 32px;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
             position: relative;
@@ -177,7 +177,7 @@
             color: #fff;
         }
 
-        /* TABS */
+        /* TABS (NUR NOCH 2 REITER) */
         .portal-tabs {
             display: flex;
             background: #050b14;
@@ -196,7 +196,7 @@
             background: transparent;
             color: var(--text-muted);
             font-weight: 600;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             cursor: pointer;
             border-radius: 8px;
             transition: all 0.2s ease;
@@ -279,7 +279,7 @@
             gap: 10px;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 10px 12px;
             background: #050b14;
@@ -290,7 +290,7 @@
             font-size: 0.85rem;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: var(--bth-cyan);
         }
 
@@ -305,6 +305,22 @@
             font-size: 0.9rem;
             cursor: pointer;
             margin-top: auto;
+        }
+
+        /* DEZENTER SUPPORT LINK UNTER DEM LOGIN */
+        .support-link {
+            display: block;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: color 0.2s;
+        }
+
+        .support-link:hover {
+            color: var(--bth-cyan);
         }
 
         .partner-info-box {
@@ -351,9 +367,9 @@
         <div class="portal-card">
             <button class="close-btn" onclick="toggleModal(false)">&times;</button>
             
+            <!-- NUR NOCH 2 TABS -->
             <div class="portal-tabs">
                 <button id="tab-client" class="tab-btn active" onclick="switchTab('client')">Kunden-Zugang</button>
-                <button id="tab-partner" class="tab-btn" onclick="switchTab('partner')">Partner werden 🤝</button>
                 <button id="tab-staff" class="tab-btn" onclick="switchTab('staff')">Profi-Login 🔐</button>
             </div>
 
@@ -380,33 +396,9 @@
                 <button class="btn-primary" onclick="startClientSession()">Planung freischalten ➔</button>
             </div>
 
-            <!-- 2. PARTNER WERDEN -->
-            <div id="view-partner" class="portal-view">
-                <div>
-                    <div class="partner-info-box">
-                        <strong>Handverlesene Partnerschaften:</strong><br>
-                        Exklusive Lizenzen pro Region für Fachbetriebe des Garten- & Landschaftsbaus.
-                    </div>
-
-                    <div class="form-group">
-                        <label>Firmenname / Betrieb</label>
-                        <input type="text" id="apply-company" placeholder="z. B. Galabau Muster GmbH">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Ansprechpartner & E-Mail</label>
-                        <input type="email" id="apply-email" placeholder="name@firma.de">
-                    </div>
-                </div>
-
-                <button class="btn-primary" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);" onclick="submitApplication()">
-                    Als Lizenzpartner bewerben ✉️
-                </button>
-            </div>
-
-            <!-- 3. MITARBEITER / PROFI LOGIN (MIT BETRIEBS-ID & 2FA AUTHENTICATOR) -->
+            <!-- 2. PROFI LOGIN (MIT SCHLANKER SUPPORT- & BEWERBUNGS-OPTION) -->
             <div id="view-staff" class="portal-view">
-                <div>
+                <div id="login-form-wrapper">
                     <p class="instruction">Geschützter Zugang für verifizierte Lizenzbetriebe:</p>
 
                     <div class="form-row">
@@ -422,17 +414,51 @@
 
                     <div class="form-group">
                         <label>Authenticator Code (2FA)</label>
-                        <input type="text" id="staff-2fa" placeholder="6-stelliger App-Code (z. B. 482 193)" maxlength="7">
+                        <input type="text" id="staff-2fa" placeholder="6-stelliger App-Code" maxlength="7">
                     </div>
+
+                    <!-- UNSCHEINBARER SUPPORT LINK -->
+                    <span class="support-link" onclick="toggleSupportView(true)">Anmelde-Probleme oder noch kein Lizenzpartner?</span>
                 </div>
 
-                <button class="btn-primary" onclick="startStaffSession()">Profi-CAD Freischalten 🔐</button>
+                <!-- VERSTECKTE SUPPORT- & BEWERBUNGSANSICHT -->
+                <div id="support-form-wrapper" style="display: none;">
+                    <div class="partner-info-box">
+                        <strong>Betriebssupport & Lizenzvergabe:</strong><br>
+                        Haben Sie Login-Probleme oder möchten Sie sich als neuer Partnerbetrieb für Ihre Region bewerben?
+                    </div>
+
+                    <div class="form-group">
+                        <label>Anliegen</label>
+                        <select id="support-type">
+                            <label>Anliegen</label>
+                            <option value="support">Hilfe bei Login / Betriebs-ID / 2FA</option>
+                            <option value="partner">Als neuer Lizenzpartner bewerben</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Firmenname / Ansprechpartner</label>
+                        <input type="text" id="support-name" placeholder="Ihre Firma oder Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>E-Mail / Telefonnummer</label>
+                        <input type="text" id="support-contact" placeholder="kontakt@firma.de">
+                    </div>
+
+                    <span class="support-link" onclick="toggleSupportView(false)" style="margin-bottom: 8px;">← Zurück zum Login</span>
+                </div>
+
+                <button id="btn-staff-submit" class="btn-primary" onclick="handleStaffAction()">Einloggen</button>
             </div>
 
         </div>
     </div>
 
     <script>
+        let isSupportMode = false;
+
         function toggleModal(show) {
             const modal = document.getElementById('login-modal');
             if (show) modal.classList.add('open');
@@ -446,12 +472,10 @@
             if (type === 'client') {
                 document.getElementById('tab-client').classList.add('active');
                 document.getElementById('view-client').classList.add('active');
-            } else if (type === 'partner') {
-                document.getElementById('tab-partner').classList.add('active');
-                document.getElementById('view-partner').classList.add('active');
             } else {
                 document.getElementById('tab-staff').classList.add('active');
                 document.getElementById('view-staff').classList.add('active');
+                toggleSupportView(false); // Zurücksetzen auf Standard-Login
             }
         }
 
@@ -467,45 +491,68 @@
             window.location.href = `editor.html?mode=client&partner=${partner}&code=${code}`;
         }
 
-        // BEISPIEL PRÜFUNG DES 2FA-CODES MIT OTPAuth LIB
-        function startStaffSession() {
-            const user = document.getElementById('staff-user').value;
-            const bid = document.getElementById('staff-bid').value;
-            const token = document.getElementById('staff-2fa').value.replace(/\s+/g, '');
+        // SWAP ZWISCHEN LOGIN UND SUPPORT/BEWERBUNG
+        function toggleSupportView(showSupport) {
+            isSupportMode = showSupport;
+            const loginWrapper = document.getElementById('login-form-wrapper');
+            const supportWrapper = document.getElementById('support-form-wrapper');
+            const submitBtn = document.getElementById('btn-staff-submit');
 
-            if(!user || !bid || !token) {
-                alert("Bitte füllen Sie alle Felder inklusive Betriebs-ID und 2FA-Code aus.");
-                return;
-            }
-
-            // Beispielhafter Secret Key für Demozwecke (Jeder Betrieb erhält einen eigenen Key)
-            const totp = new OTPAuth.TOTP({
-                issuer: "BTH-Planwerk",
-                label: user,
-                algorithm: "SHA1",
-                digits: 6,
-                period: 30,
-                secret: "JBSWY3DPEHPK3PXP" // Hier liegt der geheime Key
-            });
-
-            // Validierung des vom Nutzer eingegebenen Codes (Toleranz ±1 Fenster)
-            const delta = totp.validate({ token: token, window: 1 });
-
-            if (delta !== null) {
-                window.location.href = `editor.html?mode=pro&bid=${bid}&user=${user}`;
+            if (showSupport) {
+                loginWrapper.style.display = 'none';
+                supportWrapper.style.display = 'block';
+                submitBtn.innerText = 'Anfrage / Bewerbung senden ✉️';
             } else {
-                alert("Ungültiger 2FA Authenticator Code. Bitte prüfen Sie Ihre App.");
+                loginWrapper.style.display = 'block';
+                supportWrapper.style.display = 'none';
+                submitBtn.innerText = 'Einloggen';
             }
         }
 
-        function submitApplication() {
-            const company = document.getElementById('apply-company').value;
-            if(!company) {
-                alert("Bitte geben Sie Ihren Firmennamen an.");
-                return;
+        function handleStaffAction() {
+            if (isSupportMode) {
+                // SUPPORT / BEWERBUNG ABSCHICKEN
+                const name = document.getElementById('support-name').value;
+                const contact = document.getElementById('support-contact').value;
+
+                if (!name || !contact) {
+                    alert("Bitte tragen Sie Ihren Namen und Kontaktdaten ein.");
+                    return;
+                }
+
+                alert("Vielen Dank! Ihre Nachricht wurde an den System-Support übermittelt. Wir melden uns in Kürze.");
+                toggleModal(false);
+            } else {
+                // NORMALER LOGIN
+                const user = document.getElementById('staff-user').value;
+                const bid = document.getElementById('staff-bid').value;
+                const token = document.getElementById('staff-2fa').value.replace(/\s+/g, '');
+
+                if(!user || !bid || !token) {
+                    alert("Bitte füllen Sie alle Felder aus.");
+                    return;
+                }
+
+                const totp = new OTPAuth.TOTP({
+                    issuer: "BTH-Planwerk",
+                    label: user,
+                    algorithm: "SHA1",
+                    digits: 6,
+                    period: 30,
+                    secret: "JBSWY3DPEHPK3PXP" 
+                });
+
+                const delta = totp.validate({ token: token, window: 1 });
+
+                if (delta !== null) {
+                    window.location.href = `editor.html?mode=pro&bid=${bid}&user=${user}`;
+                } else {
+                    // BEI FEHLERHAFTER EINGABE DIREKT ZUM SUPPORT/BEWERBUNGS-SCREEN LEITEN
+                    if (confirm("Login fehlgeschlagen: Betriebs-ID oder 2FA-Code ungültig.\n\nMöchten Sie Hilfe vom Support anfordern oder sich als Lizenzpartner bewerben?")) {
+                        toggleSupportView(true);
+                    }
+                }
             }
-            alert("Vielen Dank! Ihre Bewerbung wurde eingereicht. Wir prüfen die Verfügbarkeit in Ihrer Region.");
-            toggleModal(false);
         }
     </script>
 </body>
