@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTH PLANWERK - Login</title>
+    <script src="config.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0b0f19;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-card {
+            background: #131b2e;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 30px;
+            width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #38bdf8;
+            font-size: 22px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            border-color: #0284c7;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0284c7;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #0369a1;
+        }
+        #error-msg {
+            color: #f87171;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>BTH PLANWERK</h2>
+        <div class="form-group">
+            <label for="username">Benutzername oder E-Mail</label>
+            <input type="text" id="username" placeholder="Name / E-Mail">
+        </div>
+        <div class="form-group">
+            <label for="betriebsId">Betriebs-ID</label>
+            <input type="text" id="betriebsId" placeholder="z.B. B-1042">
+        </div>
+        <div class="form-group">
+            <label for="pin">Authenticator Code (2FA) / PIN</label>
+            <input type="password" id="pin" placeholder="6-stelliger Code">
+        </div>
+        <button onclick="handleLogin()">Einloggen</button>
+        <div id="error-msg"></div>
+    </div>
+
+    <script>
+        async function handleLogin() {
+            var user = document.getElementById('username').value.trim();
+            var betriebsId = document.getElementById('betriebsId').value.trim();
+            var pin = document.getElementById('pin').value.trim();
+            var errorDiv = document.getElementById('error-msg');
+
+            errorDiv.style.display = 'none';
+
+            if (!user || !betriebsId || !pin) {
+                errorDiv.innerText = "Bitte alle Felder ausfüllen!";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            var payload = {
+                action: "login",
+                user: user,
+                betriebsId: betriebsId,
+                pin: pin
+            };
+
+            try {
+                var response = await fetch(BTH_CONFIG.SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors", // Wichtig bei Google Apps Script Web Apps falls CORS blockiert, alternativ ohne no-cors wenn JSON zurückkommt. 
+                    // Hinweis: Bei 'no-cors' kann man die Antwort nicht direkt lesen, daher nutzen wir Standard-Fetch. 
+                    // Falls Google Apps Script CORS wirft, leiten wir meist über einen Redirect um oder nutzen Standard-POST.
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+
+                // Da Apps Script im Standard-Fetch manchmal CORS-Hürden hat, 
+                // senden wir die Daten ab. Um die JSON-Antwort sauber abzufangen, 
+                // nutzen wir die Standard-Auswertung:
+                
+                // Hinweis zur Robustheit: Wir führen den Request über einen sauberen Handler aus:
+                sendLoginRequest(payload);
+
+            } catch (err) {
+                errorDiv.innerText = "Verbindungsfehler zum Server.";
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function sendLoginRequest(payload) {
+            var errorDiv = document.getElementById('error-msg');
+            
+            fetch(BTH_CONFIG.SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Session speichern
+                    sessionStorage.setItem("bth_user", data.user);
+                    sessionStorage.setItem("bth_name", data.name);
+                    sessionStorage.setItem("bth_company", data.company);
+                    sessionStorage.setItem("bth_role", data.role);
+                    sessionStorage.setItem("bth_betriebsId", data.betriebsId);
+
+                    // Weiterleitung zur Haupt-Oberfläche (main.html)
+                    window.location.href = "main.html";
+                } else {
+                    errorDiv.innerText = data.error || "Login fehlgeschlagen.";
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                // Fallback falls CORS-Header im Browser klemmen
+                errorDiv.innerText = "Login-Antwort konnte nicht verarbeitet werden. Bitte prüfen.";
+                errorDiv.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>
