@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTH PLANWERK - Portal</title>
-    <!-- OTP Library für 2FA Validierung im Frontend -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.1.4/otpauth.umd.min.js"></script>
+    <!-- Konfigurationsdatei für das Google Apps Script Backend -->
+    <script src="config.js"></script>
     <style>
         :root {
             --bth-blue-dark: #050b14;
@@ -308,6 +308,18 @@
             margin-top: 15px;
         }
 
+        .btn-primary:hover {
+            background: #0369a1;
+        }
+
+        .error-msg {
+            color: #f87171;
+            font-size: 0.78rem;
+            text-align: center;
+            margin-top: 8px;
+            display: none;
+        }
+
         /* DEZENTE DISCORD / SUPPORT LINKS */
         .support-link {
             display: block;
@@ -375,7 +387,6 @@
 
             <!-- 1. KUNDEN ZUGANG -->
             <div id="view-client" class="portal-view active">
-                <!-- NORMALE ENGABE -->
                 <div id="client-login-form">
                     <p class="instruction">Wählen Sie Ihren Fachbetrieb:</p>
                     <div class="partner-grid">
@@ -427,11 +438,13 @@
                     <span class="support-link" onclick="toggleClientTicketView(false)">← Zurück zur Code-Eingabe</span>
                 </div>
 
+                <div id="client-error-msg" class="error-msg"></div>
                 <button id="btn-client-submit" class="btn-primary" onclick="handleClientSubmit()">Planung freischalten ➔</button>
             </div>
 
-            <!-- 2. PROFI LOGIN -->
+            <!-- 2. PROFI LOGIN / PIN ÄNDERN -->
             <div id="view-staff" class="portal-view">
+                <!-- Standard Profi Login -->
                 <div id="login-form-wrapper">
                     <p class="instruction">Geschützter Zugang für verifizierte Lizenzbetriebe:</p>
 
@@ -447,11 +460,27 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Authenticator Code (2FA)</label>
-                        <input type="text" id="staff-2fa" placeholder="6-stelliger App-Code" maxlength="7">
+                        <label>Authenticator Code (2FA) / PIN</label>
+                        <input type="password" id="staff-pin" placeholder="6-stelliger Code oder PIN">
                     </div>
 
                     <span class="support-link" onclick="toggleSupportView(true)">Anmelde-Probleme oder noch kein Lizenzpartner?</span>
+                </div>
+
+                <!-- PIN-Änderungs-Maske für Ersteinrichtung (Standardmäßig versteckt) -->
+                <div id="pin-change-wrapper" style="display: none;">
+                    <div class="partner-info-box">
+                        <strong>Erster Login erkannt:</strong><br>
+                        Bitte lege deinen permanenten, sicheren PIN fest.
+                    </div>
+                    <div class="form-group">
+                        <label>Neuer PIN (mind. 4 Zeichen)</label>
+                        <input type="password" id="new-pin" placeholder="Neuer PIN">
+                    </div>
+                    <div class="form-group">
+                        <label>Neuen PIN bestätigen</label>
+                        <input type="password" id="confirm-pin" placeholder="PIN wiederholen">
+                    </div>
                 </div>
 
                 <!-- SUPPORT- & BEWERBUNGSANSICHT -->
@@ -477,6 +506,7 @@
                     <span class="support-link" onclick="toggleSupportView(false)" style="margin-bottom: 8px;">← Zurück zum Login</span>
                 </div>
 
+                <div id="staff-error-msg" class="error-msg"></div>
                 <button id="btn-staff-submit" class="btn-primary" onclick="handleStaffAction()">Einloggen</button>
             </div>
 
@@ -489,6 +519,8 @@
 
         let isTicketMode = false;
         let isStaffSupportMode = false;
+        let isPinChangeMode = false;
+        let pendingStaffUser = "";
 
         function toggleModal(show) {
             const modal = document.getElementById('login-modal');
@@ -534,14 +566,17 @@
         }
 
         function handleClientSubmit() {
+            const errorDiv = document.getElementById('client-error-msg');
+            errorDiv.style.display = 'none';
+
             if (isTicketMode) {
-                // TICKET AN DISCORD SENDEN
                 const customer = document.getElementById('ticket-customer').value;
                 const contact = document.getElementById('ticket-contact').value;
                 const reason = document.getElementById('ticket-reason').value;
 
                 if(!customer || !contact) {
-                    alert("Bitte füllen Sie Kundennummer/Name und Kontaktmöglichkeit aus.");
+                    errorDiv.innerText = "Bitte füllen Sie Kundennummer/Name und Kontaktmöglichkeit aus.";
+                    errorDiv.style.display = 'block';
                     return;
                 }
 
@@ -550,16 +585,14 @@
                 toggleClientTicketView(false);
 
             } else {
-                // NORMALER LOGIN-VERSUCH
                 const partner = document.getElementById('selected-partner').value;
                 const code = document.getElementById('client-code').value.trim();
 
-                // DUMMY-VALIDIERUNG: "1111" ODER "BTH-2026-X"
-                if (code === "1111" || code.toUpperCase() === "BTH-2026-X" || code !== "") {
-                    // WEITERLEITUNG ZUR MAIN.HTML
+                if (code !== "") {
                     window.location.href = `main.html?partner=${partner}&code=${encodeURIComponent(code)}`;
                 } else {
-                    alert("Ungültiger Planungscode. Bitte überprüfen Sie Ihre Eingabe oder erstellen Sie ein Ticket.");
+                    errorDiv.innerText = "Bitte geben Sie einen gültigen Planungscode ein.";
+                    errorDiv.style.display = 'block';
                 }
             }
         }
@@ -568,7 +601,11 @@
             isStaffSupportMode = showSupport;
             const loginWrapper = document.getElementById('login-form-wrapper');
             const supportWrapper = document.getElementById('support-form-wrapper');
+            const pinChangeWrapper = document.getElementById('pin-change-wrapper');
             const submitBtn = document.getElementById('btn-staff-submit');
+
+            pinChangeWrapper.style.display = 'none';
+            isPinChangeMode = false;
 
             if (showSupport) {
                 loginWrapper.style.display = 'none';
@@ -581,13 +618,17 @@
             }
         }
 
-        function handleStaffAction() {
+        async function handleStaffAction() {
+            const errorDiv = document.getElementById('staff-error-msg');
+            errorDiv.style.display = 'none';
+
             if (isStaffSupportMode) {
                 const name = document.getElementById('staff-ticket-name').value;
                 const type = document.getElementById('support-type').value;
 
                 if(!name) {
-                    alert("Bitte geben Sie Ihren Betriebs-Namen an.");
+                    errorDiv.innerText = "Bitte geben Sie Ihren Betriebs-Namen an.";
+                    errorDiv.style.display = 'block';
                     return;
                 }
 
@@ -595,31 +636,96 @@
                 alert("Support-Ticket an Discord gesendet.");
                 toggleSupportView(false);
 
-            } else {
-                const user = document.getElementById('staff-user').value;
-                const bid = document.getElementById('staff-bid').value;
-                const token = document.getElementById('staff-2fa').value.replace(/\s+/g, '');
+            } else if (isPinChangeMode) {
+                // PIN Ändern Logik
+                const newPin = document.getElementById('new-pin').value.trim();
+                const confirmPin = document.getElementById('confirm-pin').value.trim();
 
-                if(!user || !bid || !token) {
-                    alert("Bitte füllen Sie alle Felder aus.");
+                if (!newPin || newPin.length < 4) {
+                    errorDiv.innerText = "Der PIN muss mindestens 4 Zeichen lang sein.";
+                    errorDiv.style.display = 'block';
                     return;
                 }
 
-                const totp = new OTPAuth.TOTP({
-                    issuer: "BTH-Planwerk",
-                    label: user,
-                    algorithm: "SHA1",
-                    digits: 6,
-                    period: 30,
-                    secret: "JBSWY3DPEHPK3PXP" 
-                });
+                if (newPin !== confirmPin) {
+                    errorDiv.innerText = "Die eingegebenen PINs stimmen nicht überein.";
+                    errorDiv.style.display = 'block';
+                    return;
+                }
 
-                const delta = totp.validate({ token: token, window: 1 });
+                try {
+                    const response = await fetch(BTH_CONFIG.SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            action: "updatePin",
+                            user: pendingStaffUser,
+                            newPin: newPin
+                        })
+                    });
+                    const data = await response.json();
 
-                if (delta !== null) {
-                    window.location.href = `main.html?mode=pro&bid=${bid}&user=${user}`;
-                } else {
-                    alert("2FA Code ungültig.");
+                    if (data.success) {
+                        alert("PIN erfolgreich geändert! Bitte logge dich jetzt mit deinem neuen PIN ein.");
+                        window.location.reload();
+                    } else {
+                        errorDiv.innerText = data.error || "Fehler beim Speichern des PINs.";
+                        errorDiv.style.display = 'block';
+                    }
+                } catch (err) {
+                    errorDiv.innerText = "Verbindungsfehler zum Server.";
+                    errorDiv.style.display = 'block';
+                }
+
+            } else {
+                // Backend Login Anfrage
+                const user = document.getElementById('staff-user').value.trim();
+                const betriebsId = document.getElementById('staff-bid').value.trim();
+                const pin = document.getElementById('staff-pin').value.trim();
+
+                if(!user || !betriebsId || !pin) {
+                    errorDiv.innerText = "Bitte alle Felder ausfüllen.";
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(BTH_CONFIG.SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            action: "login",
+                            user: user,
+                            betriebsId: betriebsId,
+                            pin: pin
+                        })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        if (data.forceNewPin) {
+                            // UI auf PIN-Änderung umschalten
+                            pendingStaffUser = data.user;
+                            isPinChangeMode = true;
+                            document.getElementById('login-form-wrapper').style.display = 'none';
+                            document.getElementById('pin-change-wrapper').style.display = 'block';
+                            document.getElementById('btn-staff-submit').innerText = 'PIN speichern & Einloggen';
+                        } else {
+                            // Session im Browser speichern
+                            sessionStorage.setItem("bth_user", data.user);
+                            sessionStorage.setItem("bth_name", data.name);
+                            sessionStorage.setItem("bth_company", data.company);
+                            sessionStorage.setItem("bth_role", data.role);
+                            sessionStorage.setItem("bth_betriebsId", data.betriebsId);
+
+                            // Weiterleitung zur Main-Ansicht
+                            window.location.href = "main.html";
+                        }
+                    } else {
+                        errorDiv.innerText = data.error || "Login fehlgeschlagen.";
+                        errorDiv.style.display = 'block';
+                    }
+                } catch (err) {
+                    errorDiv.innerText = "Verbindungsfehler zum Server. Bitte prüfen.";
+                    errorDiv.style.display = 'block';
                 }
             }
         }
