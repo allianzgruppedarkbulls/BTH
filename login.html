@@ -69,7 +69,7 @@
         button:hover {
             background: #0369a1;
         }
-        #error-msg {
+        #error-msg, #pin-error-msg {
             color: #f87171;
             font-size: 13px;
             text-align: center;
@@ -80,7 +80,8 @@
 </head>
 <body>
 
-    <div class="login-card">
+    <!-- Normale Login-Maske -->
+    <div class="login-card" id="login-card">
         <h2>BTH PLANWERK</h2>
         <div class="form-group">
             <label for="username">Benutzername oder E-Mail</label>
@@ -98,7 +99,27 @@
         <div id="error-msg"></div>
     </div>
 
+    <!-- PIN-Änderungs-Maske für Ersteinrichtung (Standardmäßig versteckt) -->
+    <div class="login-card" id="pin-change-card" style="display: none;">
+        <h2>Neuen PIN vergeben</h2>
+        <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 20px;">
+            Dies ist dein erster Login. Bitte lege deinen permanenten, sicheren PIN fest.
+        </p>
+        <div class="form-group">
+            <label for="new-pin">Neuer PIN (mind. 4 Zeichen)</label>
+            <input type="password" id="new-pin" placeholder="Neuer PIN">
+        </div>
+        <div class="form-group">
+            <label for="confirm-pin">Neuen PIN bestätigen</label>
+            <input type="password" id="confirm-pin" placeholder="PIN wiederholen">
+        </div>
+        <button onclick="submitNewPin()">PIN speichern & Einloggen</button>
+        <div id="pin-error-msg"></div>
+    </div>
+
     <script>
+        var pendingUser = "";
+
         async function handleLogin() {
             var user = document.getElementById('username').value.trim();
             var betriebsId = document.getElementById('betriebsId').value.trim();
@@ -120,27 +141,7 @@
                 pin: pin
             };
 
-            try {
-                var response = await fetch(BTH_CONFIG.SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors", // Wichtig bei Google Apps Script Web Apps falls CORS blockiert, alternativ ohne no-cors wenn JSON zurückkommt. 
-                    // Hinweis: Bei 'no-cors' kann man die Antwort nicht direkt lesen, daher nutzen wir Standard-Fetch. 
-                    // Falls Google Apps Script CORS wirft, leiten wir meist über einen Redirect um oder nutzen Standard-POST.
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(payload)
-                });
-
-                // Da Apps Script im Standard-Fetch manchmal CORS-Hürden hat, 
-                // senden wir die Daten ab. Um die JSON-Antwort sauber abzufangen, 
-                // nutzen wir die Standard-Auswertung:
-                
-                // Hinweis zur Robustheit: Wir führen den Request über einen sauberen Handler aus:
-                sendLoginRequest(payload);
-
-            } catch (err) {
-                errorDiv.innerText = "Verbindungsfehler zum Server.";
-                errorDiv.style.display = 'block';
-            }
+            sendLoginRequest(payload);
         }
 
         function sendLoginRequest(payload) {
@@ -153,25 +154,76 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    // Session speichern
-                    sessionStorage.setItem("bth_user", data.user);
-                    sessionStorage.setItem("bth_name", data.name);
-                    sessionStorage.setItem("bth_company", data.company);
-                    sessionStorage.setItem("bth_role", data.role);
-                    sessionStorage.setItem("bth_betriebsId", data.betriebsId);
+                    if (data.forceNewPin) {
+                        // PIN-Änderung erzwingen
+                        pendingUser = data.user;
+                        document.getElementById('login-card').style.display = 'none';
+                        document.getElementById('pin-change-card').style.display = 'block';
+                    } else {
+                        // Session speichern
+                        sessionStorage.setItem("bth_user", data.user);
+                        sessionStorage.setItem("bth_name", data.name);
+                        sessionStorage.setItem("bth_company", data.company);
+                        sessionStorage.setItem("bth_role", data.role);
+                        sessionStorage.setItem("bth_betriebsId", data.betriebsId);
 
-                    // Weiterleitung zur Haupt-Oberfläche (main.html)
-                    window.location.href = "main.html";
+                        // Weiterleitung zur Haupt-Oberfläche (main.html)
+                        window.location.href = "main.html";
+                    }
                 } else {
                     errorDiv.innerText = data.error || "Login fehlgeschlagen.";
                     errorDiv.style.display = 'block';
                 }
             })
             .catch(err => {
-                // Fallback falls CORS-Header im Browser klemmen
                 errorDiv.innerText = "Login-Antwort konnte nicht verarbeitet werden. Bitte prüfen.";
                 errorDiv.style.display = 'block';
             });
+        }
+
+        async function submitNewPin() {
+            var newPin = document.getElementById('new-pin').value.trim();
+            var confirmPin = document.getElementById('confirm-pin').value.trim();
+            var errorDiv = document.getElementById('pin-error-msg');
+
+            errorDiv.style.display = 'none';
+
+            if (!newPin || newPin.length < 4) {
+                errorDiv.innerText = "Der PIN muss mindestens 4 Zeichen lang sein.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (newPin !== confirmPin) {
+                errorDiv.innerText = "Die eingegebenen PINs stimmen nicht überein.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            var payload = {
+                action: "updatePin",
+                user: pendingUser,
+                newPin: newPin
+            };
+
+            try {
+                var response = await fetch(BTH_CONFIG.SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                var data = await response.json();
+
+                if (data.success) {
+                    alert("PIN erfolgreich geändert! Bitte logge dich jetzt mit deinem neuen PIN ein.");
+                    window.location.reload();
+                } else {
+                    errorDiv.innerText = data.error || "Fehler beim Speichern des PINs.";
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.innerText = "Verbindungsfehler zum Server.";
+                errorDiv.style.display = 'block';
+            }
         }
     </script>
 </body>
