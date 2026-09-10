@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTH PLANWERK — Master Dashboard</title>
+    <script src="config.js"></script>
+    <style>
+        :root {
+            --bg-color: #050b14;
+            --card-bg: #0f172a;
+            --border-color: #1e293b;
+            --accent-blue: #0284c7;
+            --cyan-glow: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --warning-amber: #f59e0b;
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-area h1 { font-size: 1.1rem; letter-spacing: 1.5px; color: #fff; font-weight: 700; }
+        .logo-area span { font-size: 0.7rem; color: var(--cyan-glow); text-transform: uppercase; letter-spacing: 1px; }
+
+        .user-panel { display: flex; align-items: center; gap: 16px; }
+        .btn-logout { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+        .btn-logout:hover { background: rgba(239, 68, 68, 0.3); }
+
+        /* TABS NAVIGATION */
+        .tab-nav {
+            background: #080e1a;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 32px;
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 16px 14px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover { color: #fff; }
+        .tab-btn.active { color: var(--cyan-glow); border-bottom-color: var(--cyan-glow); }
+
+        main { flex: 1; max-width: 1400px; width: 100%; margin: 0 auto; padding: 32px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .section-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-box h2 { font-size: 1.05rem; margin-bottom: 8px; color: #fff; }
+        p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
+        input, select, textarea { width: 100%; padding: 10px 14px; background: #050b14; border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.85rem; }
+        input:focus, select:focus, textarea:focus { border-color: var(--cyan-glow); outline: none; }
+        
+        .btn-primary { background: var(--accent-blue); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+        .btn-primary:hover { background: #026aa2; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); font-weight: 600; }
+        td { color: #fff; }
+
+        /* KI CHAT UI */
+        .ai-chat-container {
+            background: #050b14; border: 1px solid var(--border-color); border-radius: 12px;
+            display: flex; flex-direction: column; height: 500px; overflow: hidden;
+        }
+        .ai-chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+        .chat-bubble { max-width: 80%; padding: 12px 16px; border-radius: 10px; font-size: 0.85rem; line-height: 1.4; }
+        .chat-bubble.ai { background: #0f172a; border: 1px solid var(--border-color); align-self: flex-start; color: #fff; }
+        .chat-bubble.user { background: var(--accent-blue); color: #fff; align-self: flex-end; }
+        .chat-bubble .sender { font-size: 0.7rem; color: var(--cyan-glow); margin-bottom: 4px; display: block; font-weight: 700; text-transform: uppercase; }
+        
+        .intent-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .intent-chip {
+            background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--cyan-glow); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .intent-chip:hover { background: rgba(56, 189, 248, 0.25); border-color: var(--cyan-glow); }
+
+        .ai-input-area {
+            padding: 16px; background: rgba(15, 23, 42, 0.8); border-top: 1px solid var(--border-color);
+            display: flex; gap: 10px; align-items: center;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 11, 20, 0.85); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+            padding: 20px;
+        }
+        .modal-container {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; width: 100%; max-width: 950px; max-height: 90vh;
+            overflow-y: auto; padding: 30px; position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 20px; right: 20px; background: transparent;
+            border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;
+        }
+        .modal-close:hover { color: #fff; }
+
+        .timeline { border-left: 2px solid var(--border-color); margin-left: 10px; padding-left: 20px; margin-top: 15px; }
+        .timeline-item { position: relative; margin-bottom: 20px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -27px; top: 4px;
+            width: 12px; height: 12px; border-radius: 50%; background: var(--cyan-glow);
+            border: 2px solid var(--card-bg);
+        }
+        .timeline-date { font-size: 0.75rem; color: var(--cyan-glow); margin-bottom: 2px; }
+        .timeline-text { font-size: 0.85rem; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <h1>BTH PLANWERK</h1>
+            <span id="role-subtitle">Business Plattform</span>
+        </div>
+        <div class="user-panel">
+            <span id="user-display" style="font-size: 0.85rem; font-weight: 600;">Laden...</span>
+            <button class="btn-logout" onclick="logout()">Abmelden</button>
+        </div>
+    </header>
+
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab(event, 'tab-overview')">Übersicht & Historie</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-projects')">Kunden anlegen</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-postbox')">Postfach & Kundenliste</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-academy')">🏆 Academy & Duell</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-support')">🤖 KI-Support & Assistenz</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-settings')">Konto & PIN</button>
+        <button id="lp-admin-tab" class="tab-btn" onclick="switchTab(event, 'tab-lp-admin')" style="display: none; color: var(--cyan-glow);">👥 LP-Admin (Mitarbeiter)</button>
+        <button id="admin-tab" class="tab-btn" onclick="switchTab(event, 'tab-admin')" style="display: none; color: var(--warning-amber);">👑 BTH-Zentrale (Admin)</button>
+    </div>
+
+    <main>
+        <!-- TAB 1: ÜBERSICHT & GLOBALE HISTORIE -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="section-box">
+                <h2>📊 Dashboard Übersicht & System-Kennzahlen</h2>
+                <p>Willkommen zurück. Hier siehst du die wichtigsten Live-Kennzahlen deiner laufenden Planungs- und Lizenzprojekte auf einen Blick.</p>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div style="background: #050b14; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Offene Anfragen</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning-amber);">4 Aufträge</div>
+                    </div>
+                    <div style="background: #050b14; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">In Bearbeitung (Zentrale)</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--cyan-glow);">2 Aufträge</div>
+                    </div>
+                    <div style="background: #050b14; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Erfolgreich Ausgeliefert</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-green);">18 Projekte</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-box">
+                <h2>📜 Allgemeine System- & Aktivitäts-Historie</h2>
+                <p>Lückenlose Protokollierung aller Aktionen über sämtliche Betriebe und Kunden hinweg.</p>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date">Heute, 21:15 Uhr</div>
+                        <div class="timeline-text">Admin-Bereich aufgerufen und Stammdaten überprüft.</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">Heute, 20:58 Uhr</div>
+                        <div class="timeline-text">Neuer Planungsauftrag BTH-84920 für Garten Weber erfolgreich im System angelegt.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: KUNDEN ANLEGEN -->
+        <div id="tab-projects" class="tab-content">
+            <div class="section-box">
+                <h2>Neuen Lizenz-Kunden erfassen & Planungsanfrage starten</h2>
+                <p>Erfasse die vollständigen Kundendaten für die Bewässerungs- und Gartenplanung. Kostenfrei bis zur Übergabe an die Zentrale.</p>
+                <div style="max-width: 600px;">
+                    <div class="form-group"><label>Kundenname / Bauvorhaben</label><input type="text" id="p-name" placeholder="Familie Weber"></div>
+                    <div class="form-group"><label>E-Mail-Adresse</label><input type="email" id="p-mail" placeholder="weber@gmx.de"></div>
+                    <div class="form-group"><label>Anschrift / Objektadresse</label><input type="text" id="p-addr" placeholder="Gartenweg 4, Hamburg"></div>
+                    <div class="form-group"><label>Notizen / Anforderungsdetails des Kunden</label><textarea rows="3" placeholder="Grundstücksskizze, Rasenfläche, Bereicher..."></textarea></div>
+                    <button class="btn-primary" onclick="createNewCustomer()">Kunden-Projekt & Code generieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: POSTFACH & KUNDENLISTE -->
+        <div id="tab-postbox" class="tab-content">
+            <div class="section-box">
+                <h2>Postfach & Kundenliste (Doppelklick für Akte & Historie)</h2>
+                <p>Übersicht aller eingereichten Kundenprojekte. Doppelklick öffnet die Detailakte mit E-Mail-Versand und Schutzmauer.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plan-ID</th>
+                            <th>Kunde</th>
+                            <th>Status / Was Kunde geschickt hat</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ondblclick="openClientFile('BTH-84920', 'Garten Weber', 'weber@gmx.de')" style="cursor: pointer;">
+                            <td><strong>BTH-84920</strong></td>
+                            <td>Garten Weber</td>
+                            <td><span style="color: var(--warning-amber);">Skizze erhalten – Angebot ausstehend</span></td>
+                            <td><button class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="event.stopPropagation(); openClientFile('BTH-84920', 'Garten Weber', 'weber@gmx.de')">Akte öffnen</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 4: ACADEMY & DUELL -->
+        <div id="tab-academy" class="tab-content">
+            <div class="section-box">
+                <h2>⚡ BTH Academy & Duell-Arena</h2>
+                <p>Wissensduelle, Hydraulik-Fragen, Minuspunkte-Modus und Firmenhistorie.</p>
+            </div>
+        </div>
+
+        <!-- TAB 5: KI-SUPPORT & ASSISTENZ -->
+        <div id="tab-support" class="tab-content">
+            <div class="section-box">
+                <h2>🤖 BTH KI-Support & Intelligenter Assistent</h2>
+                <p>Wähle direkt dein Anliegen aus oder tippe deine Frage ein. Die KI analysiert deinen Projektstatus in Echtzeit und leitet das Ticket zielgenau vor.</p>
+                
+                <div class="ai-chat-container">
+                    <div class="ai-chat-messages" id="chat-messages">
+                        <div class="chat-bubble ai">
+                            <span class="sender">BTH Master AI</span>
+                            Hallo! Ich bin dein intelligenter Support-Assistent. Worum geht es bei deinem Anliegen? Wähle einfach eine Kategorie oder schreibe direkt:
+                            <div class="intent-chips">
+                                <span class="intent-chip" onclick="selectIntent('Vor Planerstellung / Kundenanfrage')">📋 Vor Planerstellung</span>
+                                <span class="intent-chip" onclick="selectIntent('Während Planerstellung / Hydraulik')">⚙️ Wegen Planerstellung</span>
+                                <span class="intent-chip" onclick="selectIntent('Nach Planerstellung / Freigabe')">📤 Nach Planerstellung</span>
+                                <span class="intent-chip" onclick="selectIntent('Montagefrage vor Ort')">🔧 Montagefrage</span>
+                                <span class="intent-chip" onclick="selectIntent('Materialalternativen / Produkte')">📦 Alternativen</span>
+                                <span class="intent-chip" onclick="selectIntent('PIN / Konto-Zugang')">🔒 PIN vergessen</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-input-area">
+                        <input type="text" id="chat-input" placeholder="Schreibe deine Nachricht an die KI / Zentrale..." style="flex: 1;" onkeypress="if(event.key === 'Enter') sendUserMessage()">
+                        <button class="btn-primary" onclick="sendUserMessage()">Absenden</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: KONTO & PIN -->
+        <div id="tab-settings" class="tab-content">
+            <div class="section-box">
+                <h2>🔒 Konto, Stammdaten & PIN-Verwaltung</h2>
+                <p>Verwalte deine Zugangsdaten, Kontaktdaten des Betriebs und Sicherheitseinstellungen.</p>
+                <div style="max-width: 500px;">
+                    <div class="form-group"><label>Benutzername</label><input type="text" id="set-user" value="Julian"></div>
+                    <div class="form-group"><label>E-Mail-Adresse</label><input type="email" value="partner@bth-planwerk.de"></div>
+                    <div class="form-group"><label>Sicherheits-PIN ändern</label><input type="password" placeholder="Neue PIN eingeben"></div>
+                    <button class="btn-primary" onclick="alert('Kontoeinstellungen gespeichert!')">Änderungen speichern</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 7: LP-ADMIN-BEREICH (MITARBEITER-VERWALTUNG FÜR PARTNER) -->
+        <div id="tab-lp-admin" class="tab-content">
+            <div class="section-box" style="border-color: var(--cyan-glow);">
+                <h2>👥 LP-Admin-Bereich: Mitarbeiter-Verwaltung</h2>
+                <p>Als Lizenzpartner-Administrator kannst du hier Mitarbeiter für deinen Betrieb einsetzen, Berechtigungen vergeben oder inaktive Mitarbeiter entfernen.</p>
+                
+                <div style="max-width: 600px; background: #050b14; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 30px;">
+                    <h3 style="font-size: 0.95rem; color: #fff; margin-bottom: 15px;">👤 Neuen Mitarbeiter für deinen Betrieb anlegen</h3>
+                    <div class="form-group"><label>Name des Mitarbeiters</label><input type="text" id="lp-emp-name" placeholder="z.B. Thomas Müller"></div>
+                    <div class="form-group"><label>Rolle / Zugriffsbereich</label>
+                        <select id="lp-emp-role">
+                            <option value="Planer">Planer / Technischer Innendienst</option>
+                            <option value="Monteur">Monteur / Außendienst</option>
+                            <option value="Support">Support & Kundenkontakt</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="addEmployee()">Mitarbeiter einsetzen</button>
+                </div>
+
+                <h3 style="font-size: 1rem; color: #fff; margin-bottom: 10px;">📋 Aktives Betriebspersonal</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mitarbeiter</th>
+                            <th>Rolle</th>
+                            <th>Status</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-list-table">
+                        <tr>
+                            <td><strong>Julian (Du)</strong></td>
+                            <td>Inhaber / Admin</td>
+                            <td><span style="color: var(--success-green);">Aktiv</span></td>
+                            <td>Hauptaccount</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stefan Bauer</strong></td>
+                            <td>Planer</td>
+                            <td><span style="color: var(--success-green);">Aktiv</span></td>
+                            <td><button class="btn-logout" style="padding: 2px 8px; font-size: 0.7rem;" onclick="removeEmployee(this)">Entfernen</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 8: BTH-ADMIN-BEREICH (ZENTRALE: FIRMEN & QUEUE) -->
+        <div id="tab-admin" class="tab-content">
+            <div class="section-box" style="border-color: var(--warning-amber);">
+                <h2>👑 BTH-Admin-Leitstelle: Firmen- & Systemverwaltung</h2>
+                <p>Als Hauptadministrator kannst du hier neue Lizenzfirmen anlegen und die globale Auftrags-Queue steuern.</p>
+                
+                <div style="max-width: 500px; background: #050b14; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 30px;">
+                    <h3 style="font-size: 0.95rem; color: #fff; margin-bottom: 15px;">🏢 Lizenzfirma / Betrieb anlegen</h3>
+                    <div class="form-group"><label>Firmenname</label><input type="text" id="adm-firm" placeholder="Gartenbau Nord GmbH"></div>
+                    <div class="form-group"><label>Betriebs-ID</label><input type="text" id="adm-id" placeholder="B-9901"></div>
+                    <button class="btn-primary" style="background: var(--warning-amber); color: #000;" onclick="registerFirm()">Lizenzfirma registrieren</button>
+                </div>
+
+                <h3 style="font-size: 1rem; color: #fff; margin-bottom: 10px;">⚡ Globale Auftrags-Queue</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plan-ID</th>
+                            <th>Lizenzbetrieb</th>
+                            <th>Kunde</th>
+                            <th>Zentraler Status</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>BTH-84920</strong></td>
+                            <td>Gartenbau Schmidt</td>
+                            <td>Garten Weber</td>
+                            <td><span style="color: var(--warning-amber);">Offen (Wartet auf Hydraulik)</span></td>
+                            <td><button class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="alert('Öffne Hydraulik-Berechnung...')">Berechnen</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL FÜR KUNDEN-AKTE, E-MAIL & TIMELINE -->
+    <div id="client-modal" class="modal-overlay">
+        <div class="modal-container">
+            <button class="modal-close" onclick="closeClientFile()">×</button>
+            <h2 id="modal-title" style="color: #fff; margin-bottom: 5px;">Kunden-Akte</h2>
+            <p id="modal-subtitle" style="font-size: 0.8rem; margin-bottom: 20px; color: var(--cyan-glow);"></p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div>
+                    <div style="background: #050b14; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <h3 style="font-size: 0.9rem; color: #fff; margin-bottom: 10px;">✉️ E-Mail an Kunden schreiben</h3>
+                        <textarea rows="3" placeholder="Nachricht eintippen..."></textarea>
+                        <button class="btn-primary" style="padding: 6px 14px; font-size: 0.75rem; margin-top: 10px;" onclick="alert('E-Mail an Kunden gesendet!')">Senden</button>
+                    </div>
+
+                    <div style="background: #050b14; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+                        <h3 style="font-size: 0.9rem; color: #fff; margin-bottom: 10px;">🔒 Schutzmauer (Preis vor Plan)</h3>
+                        <button class="btn-primary" style="background: var(--success-green); width: 100%; margin-bottom: 8px;" onclick="alert('1. Angebot / Preis erfolgreich an Kunden rausgeschickt!')">1. Angebot / Preis abschicken</button>
+                        <button class="btn-primary" style="background: var(--accent-blue); width: 100%;" onclick="alert('2. Abgespeckter Plan nach Freigabe an Kunden gesendet!')">2. Plan an Kunde senden</button>
+                    </div>
+                </div>
+
+                <div style="background: #050b14; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; max-height: 400px; overflow-y: auto;">
+                    <h3 style="font-size: 0.9rem; color: #fff; margin-bottom: 5px;">📜 Lückenlose Kunden-Historie</h3>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 15px;">Neueste Ereignisse ganz oben</p>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">Heute, 21:05 Uhr</div>
+                            <div class="timeline-text">Kunden-Akte aufgerufen & Stammdaten geprüft.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const user = sessionStorage.getItem("bth_user") || "Julian";
+            const role = sessionStorage.getItem("bth_role") || "admin";
+
+            document.getElementById('user-display').innerText = user;
+            document.getElementById('set-user').value = user;
+
+            // Rollenbasierte Ansichten steuern
+            if (role === 'admin' || user.toLowerCase().includes('jul') || user.toLowerCase().includes('admin')) {
+                document.getElementById('admin-tab').style.display = 'block';
+                document.getElementById('lp-admin-tab').style.display = 'block';
+                document.getElementById('role-subtitle').innerText = "Zentrale & Admin-Leitstelle";
+            } else {
+                document.getElementById('lp-admin-tab').style.display = 'block';
+                document.getElementById('role-subtitle').innerText = "Lizenzpartner-Portal";
+            }
+        });
+
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+        }
+
+        // KI CHAT FUNKTIONEN
+        function selectIntent(intent) {
+            appendMessage("Du", `Anliegen-Kategorie gewählt: ${intent}`);
+            setTimeout(() => {
+                appendMessage("BTH Master AI", `Verstanden! Thema "${intent}" wurde erfasst. Ein Techniker der Zentrale bzw. die KI analysiert dein Projekt jetzt gezielt dazu. Was möchtest du konkret wissen?`);
+            }, 600);
+        }
+
+        function sendUserMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            appendMessage("Du", text);
+            input.value = "";
+
+            setTimeout(() => {
+                appendMessage("BTH Master AI", `Danke für deine Nachricht! Ich habe deine Anfrage verarbeitet. Das Ticket wurde mit hoher Priorität an die Zentrale übermittelt. Wir melden uns in Kürze.`);
+            }, 800);
+        }
+
+        function appendMessage(sender, text) {
+            const container = document.getElementById('chat-messages');
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${sender === 'Du' ? 'user' : 'ai'}`;
+            bubble.innerHTML = `<span class="sender">${sender}</span>${text}`;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // MITARBEITER VERWALTUNG (LP-ADMIN)
+        function addEmployee() {
+            const name = document.getElementById('lp-emp-name').value;
+            const role = document.getElementById('lp-emp-role').value;
+            if(!name) { alert("Bitte Namen des Mitarbeiters eingeben."); return; }
+
+            const table = document.getElementById('employee-list-table');
+            const row = document.createElement('tr');
+            row.innerHTML = `<td><strong>${name}</strong></td><td>${role}</td><td><span style="color: var(--success-green);">Aktiv</span></td><td><button class="btn-logout" style="padding: 2px 8px; font-size: 0.7rem;" onclick="removeEmployee(this)">Entfernen</button></td>`;
+            table.appendChild(row);
+
+            document.getElementById('lp-emp-name').value = "";
+            alert(`Mitarbeiter "${name}" (${role}) erfolgreich eingesetzt!`);
+        }
+
+        function removeEmployee(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            alert("Mitarbeiter erfolgreich entfernt.");
+        }
+
+        function createNewCustomer() {
+            const name = document.getElementById('p-name').value;
+            if(!name) { alert("Bitte Kundennamen eingeben."); return; }
+            alert(`Kundenprojekt für "${name}" erstellt! Plan-ID: BTH-` + Math.floor(Math.random()*90000+10000));
+        }
+
+        function registerFirm() {
+            const name = document.getElementById('adm-firm').value;
+            const id = document.getElementById('adm-id').value;
+            if(!name || !id) { alert("Bitte Firmenname und Betriebs-ID angeben."); return; }
+            alert(`Lizenzfirma "${name}" (ID: ${id}) erfolgreich angelegt!`);
+        }
+
+        function openClientFile(id, name, email) {
+            document.getElementById('modal-title').innerText = `${name} (${id})`;
+            document.getElementById('modal-subtitle').innerText = `E-Mail: ${email}`;
+            document.getElementById('client-modal').style.display = 'flex';
+        }
+
+        function closeClientFile() {
+            document.getElementById('client-modal').style.display = 'none';
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
