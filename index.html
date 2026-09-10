@@ -637,7 +637,6 @@
                 toggleSupportView(false);
 
             } else if (isPinChangeMode) {
-                // PIN Ändern Logik
                 const newPin = document.getElementById('new-pin').value.trim();
                 const confirmPin = document.getElementById('confirm-pin').value.trim();
 
@@ -665,8 +664,8 @@
                     const data = await response.json();
 
                     if (data.success) {
-                        alert("PIN erfolgreich geändert! Bitte logge dich jetzt mit deinem neuen PIN ein.");
-                        window.location.reload();
+                        alert("PIN erfolgreich geändert! Bitte logge dich jetzt ins Dashboard ein.");
+                        window.location.href = "dashboard.html";
                     } else {
                         errorDiv.innerText = data.error || "Fehler beim Speichern des PINs.";
                         errorDiv.style.display = 'block';
@@ -677,7 +676,6 @@
                 }
 
             } else {
-                // Backend Login Anfrage
                 const user = document.getElementById('staff-user').value.trim();
                 const betriebsId = document.getElementById('staff-bid').value.trim();
                 const pin = document.getElementById('staff-pin').value.trim();
@@ -702,22 +700,20 @@
 
                     if (data.success) {
                         if (data.forceNewPin) {
-                            // UI auf PIN-Änderung umschalten
                             pendingStaffUser = data.user;
                             isPinChangeMode = true;
                             document.getElementById('login-form-wrapper').style.display = 'none';
                             document.getElementById('pin-change-wrapper').style.display = 'block';
                             document.getElementById('btn-staff-submit').innerText = 'PIN speichern & Einloggen';
                         } else {
-                            // Session im Browser speichern
                             sessionStorage.setItem("bth_user", data.user);
                             sessionStorage.setItem("bth_name", data.name);
                             sessionStorage.setItem("bth_company", data.company);
                             sessionStorage.setItem("bth_role", data.role);
                             sessionStorage.setItem("bth_betriebsId", data.betriebsId);
 
-                            // Weiterleitung zur Main-Ansicht
-                            window.location.href = "main.html";
+                            // Weiterleitung direkt ins Dashboard
+                            window.location.href = "dashboard.html";
                         }
                     } else {
                         errorDiv.innerText = data.error || "Login fehlgeschlagen.";
