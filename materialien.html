@@ -681,32 +681,31 @@
         window.location.href = 'dashboard.html';
     }
 
-  // --- DATENABRUF ÜBER DIE GOOGLE APPS SCRIPT WEB-APP-URL ---
-function datenLaden() {
-    // Prüfen, ob eine Web-App-URL in config.js hinterlegt ist
-    const backendUrl = typeof BTH_CONFIG !== 'undefined' && BTH_CONFIG.webAppUrl ? BTH_CONFIG.webAppUrl : '';
+// --- DATENABRUF ÜBER DIE GOOGLE APPS SCRIPT WEB-APP-URL ---
+    function datenLaden() {
+        // Prüfen, ob eine Web-App-URL in config.js hinterlegt ist
+        const backendUrl = typeof BTH_CONFIG !== 'undefined' && BTH_CONFIG.webAppUrl ? BTH_CONFIG.webAppUrl : '';
 
-    if (!backendUrl) {
-        console.warn("Keine Web-App-URL in der config.js gefunden. Bitte trage dort deine Google Apps Script URL ein.");
-        document.getElementById('materialTabelleBody').innerHTML = '<tr><td colspan="11" class="empty">Fehler: Keine Backend-URL konfiguriert.</td></tr>';
-        return;
-    }
+        if (!backendUrl) {
+            console.warn("Keine Web-App-URL in der config.js gefunden. Bitte trage dort deine Google Apps Script URL ein.");
+            document.getElementById('materialTabelleBody').innerHTML = '<tr><td colspan="11" class="empty">Fehler: Keine Backend-URL konfiguriert.</td></tr>';
+            return;
+        }
 
-    // Daten per Fetch von Google Sheets abrufen
-    fetch(backendUrl + '?action=ladeAlleDaten')
-        .then(response => response.json())
-        .then(data => {
-            appDaten.materialien = data.materialien || [];
-            appDaten.lieferanten = data.lieferanten || [];
-            appDaten.kategorien = data.kategorien || [];
+        // Daten per Fetch von Google Sheets abrufen
+        fetch(backendUrl + '?action=ladeAlleDaten')
+            .then(response => response.json())
+            .then(data => {
+                appDaten.materialien = data.materialien || [];
+                appDaten.lieferanten = data.lieferanten || [];
+                appDaten.kategorien = data.kategorien || [];
 
-            uiAktualisieren();
-        })
-        .catch(error => {
-            console.error("Fehler beim Abrufen der Datenbankdaten:", error);
-            document.getElementById('materialTabelleBody').innerHTML = '<tr><td colspan="11" class="empty">Verbindungsfehler zur Datenbank.</td></tr>';
-        });
-}
+                uiAktualisieren();
+            })
+            .catch(error => {
+                console.error("Fehler beim Abrufen der Datenbankdaten:", error);
+                document.getElementById('materialTabelleBody').innerHTML = '<tr><td colspan="11" class="empty">Verbindungsfehler zur Datenbank.</td></tr>';
+            });
     }
 
     function datenAnzeigen(response) {
@@ -843,7 +842,20 @@ function datenLaden() {
             email: email || '' 
         };
 
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
+        const backendUrl = typeof BTH_CONFIG !== 'undefined' && BTH_CONFIG.webAppUrl ? BTH_CONFIG.webAppUrl : '';
+
+        if (backendUrl) {
+            fetch(backendUrl, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'speichereLieferant', data: neuerLief })
+            })
+            .then(res => res.json())
+            .then(() => {
+                alert("Lieferant erfolgreich in der Datenbank gespeichert.");
+                datenLaden();
+            })
+            .catch(fehlerBehandeln);
+        } else if (typeof google !== 'undefined' && google.script && google.script.run) {
             google.script.run
                 .withSuccessHandler(() => {
                     alert("Lieferant erfolgreich in der Datenbank gespeichert.");
@@ -854,7 +866,7 @@ function datenLaden() {
         } else {
             appDaten.lieferanten.push(neuerLief);
             uiAktualisieren();
-            alert("Lieferant lokal hinzugefügt (Keine GAS-Verbindung aktiv).");
+            alert("Lieferant lokal hinzugefügt (Keine Backend-Verbindung aktiv).");
         }
     }
 
@@ -875,7 +887,21 @@ function datenLaden() {
             lieferant: document.getElementById('materialLieferant').value
         };
 
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
+        const backendUrl = typeof BTH_CONFIG !== 'undefined' && BTH_CONFIG.webAppUrl ? BTH_CONFIG.webAppUrl : '';
+
+        if (backendUrl) {
+            fetch(backendUrl, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'speichereMaterial', data: neuesMaterial })
+            })
+            .then(res => res.json())
+            .then(() => {
+                alert("Material erfolgreich in Google Sheets gespeichert.");
+                materialFormZuruecksetzen();
+                datenLaden();
+            })
+            .catch(fehlerBehandeln);
+        } else if (typeof google !== 'undefined' && google.script && google.script.run) {
             google.script.run
                 .withSuccessHandler(() => {
                     alert("Material erfolgreich in Google Sheets gespeichert.");
@@ -888,7 +914,7 @@ function datenLaden() {
             appDaten.materialien.push(neuesMaterial);
             materialFormZuruecksetzen();
             uiAktualisieren();
-            alert("Material lokal gespeichert (Keine GAS-Verbindung aktiv).");
+            alert("Material lokal gespeichert (Keine Backend-Verbindung aktiv).");
         }
     }
 
