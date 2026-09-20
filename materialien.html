@@ -681,19 +681,32 @@
         window.location.href = 'dashboard.html';
     }
 
-    // --- DATENABRUF AUS DEM GOOGLE APPS SCRIPT BACKEND ---
-    function datenLaden() {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-            // Verbindung zu Google Apps Script (`code.gs`)
-            google.script.run
-                .withSuccessHandler(datenAnzeigen)
-                .withFailureHandler(fehlerBehandeln)
-                .ladeAlleDaten(); // Funktion im GAS-Backend, die alle Sheets abfragt
-        } else {
-            // Fallback für lokale Entwicklungsumgebung ohne aktives GAS (Simulierter leerer Zustand oder lokaler Fetch)
-            console.warn("Google Apps Script Umgebung nicht gefunden. Verwende Standard-Schnittstelle.");
-            // Hier könnte bei Bedarf ein lokaler Fetch zu einer Mock-API erfolgen.
-        }
+  // --- DATENABRUF ÜBER DIE GOOGLE APPS SCRIPT WEB-APP-URL ---
+function datenLaden() {
+    // Prüfen, ob eine Web-App-URL in config.js hinterlegt ist
+    const backendUrl = typeof BTH_CONFIG !== 'undefined' && BTH_CONFIG.webAppUrl ? BTH_CONFIG.webAppUrl : '';
+
+    if (!backendUrl) {
+        console.warn("Keine Web-App-URL in der config.js gefunden. Bitte trage dort deine Google Apps Script URL ein.");
+        document.getElementById('materialTabelleBody').innerHTML = '<tr><td colspan="11" class="empty">Fehler: Keine Backend-URL konfiguriert.</td></tr>';
+        return;
+    }
+
+    // Daten per Fetch von Google Sheets abrufen
+    fetch(backendUrl + '?action=ladeAlleDaten')
+        .then(response => response.json())
+        .then(data => {
+            appDaten.materialien = data.materialien || [];
+            appDaten.lieferanten = data.lieferanten || [];
+            appDaten.kategorien = data.kategorien || [];
+
+            uiAktualisieren();
+        })
+        .catch(error => {
+            console.error("Fehler beim Abrufen der Datenbankdaten:", error);
+            document.getElementById('materialTabelleBody').innerHTML = '<tr><td colspan="11" class="empty">Verbindungsfehler zur Datenbank.</td></tr>';
+        });
+}
     }
 
     function datenAnzeigen(response) {
