@@ -266,18 +266,6 @@
             border-color: var(--cyan-glow);
         }
 
-        .form-subheading {
-            grid-column: 1 / -1;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 6px;
-            margin-top: 10px;
-            margin-bottom: 5px;
-            color: var(--cyan-glow);
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
         .form-actions {
             margin-top: 20px;
             display: flex;
@@ -439,9 +427,7 @@
         <button class="nav-button" onclick="bereichOeffnen('kategorien', this)">🗂 Kategorien</button>
     </nav>
 
-    <!-- =========================================================
-         MATERIALIEN SEKTION
-    ========================================================== -->
+    <!-- MATERIALIEN SEKTION -->
     <section id="bereich-materialien" class="section active">
 
         <div id="partnerNoticeMaterial" class="notice notice-warning admin-only" style="display:none;">
@@ -485,7 +471,6 @@
                         <label for="materialKategorie">Kategorie</label>
                         <select id="materialKategorie" required>
                             <option value="">Kategorie auswählen</option>
-                            <!-- Dynamisch via JS aus Sheets -->
                         </select>
                     </div>
 
@@ -543,10 +528,9 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="materialLieferant">Lieferant (Zuordnung am Ende)</label>
+                        <label for="materialLieferant">Lieferant</label>
                         <select id="materialLieferant" required>
                             <option value="">Lieferant auswählen</option>
-                            <!-- Dynamisch via JS aus Lieferanten-Tabelle -->
                         </select>
                     </div>
 
@@ -595,9 +579,7 @@
 
     </section>
 
-    <!-- =========================================================
-         LIEFERANTEN SEKTION
-    ========================================================== -->
+    <!-- LIEFERANTEN SEKTION -->
     <section id="bereich-lieferanten" class="section">
         <div class="section-box">
             <div class="section-header">
@@ -627,9 +609,7 @@
         </div>
     </section>
 
-    <!-- =========================================================
-         KATEGORIEN SEKTION
-    ========================================================== -->
+    <!-- KATEGORIEN SEKTION -->
     <section id="bereich-kategorien" class="section">
         <div class="section-box">
             <div class="section-header">
@@ -643,7 +623,6 @@
 </main>
 
 <script>
-    // Rollen-Umschaltung für Admin vs. Partner Test
     function rolleWechseln() {
         const rolle = document.getElementById('userRole').value;
         const body = document.body;
@@ -660,7 +639,6 @@
         }
     }
 
-    // Navigation zwischen Tabs
     function bereichOeffnen(bereichsId, btn) {
         document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
         document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
@@ -691,10 +669,12 @@
         alert("Lieferanten-Erfassungsmaske öffnet sich...");
     }
 
-    // Platzhalter für den späteren Apps Script / Backend Datenabruf
+    function materialienLaden() {
+        // Platzhalter für Google Apps Script Abruf
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         rolleWechseln();
-        // Hier werden später die Google Sheets Daten via google.script.run geladen
     });
 </script>
 
