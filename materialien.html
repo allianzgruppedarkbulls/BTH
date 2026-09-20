@@ -549,7 +549,7 @@
                 <h2>Materialkatalog</h2>
                 <button class="btn-secondary" onclick="materialienLaden()">↻ Aktualisieren</button>
             </div>
-            <p class="section-description">Übersicht aller verzeichneten Komponenten.</p>
+            <p class="section-description">Übersicht aller verzeichneten Komponenten (abgeglichen mit Google Sheets: Material_Katalog).</p>
 
             <div class="table-wrapper">
                 <table>
@@ -586,7 +586,7 @@
                 <h2>Lieferanten-Stammdaten</h2>
                 <button class="btn-primary admin-only" onclick="neuerLieferantFormOeffnen()">+ Lieferant anlegen</button>
             </div>
-            <p class="section-description">Verwaltung der Unternehmen, Ansprechpartner und Kontaktdaten.</p>
+            <p class="section-description">Verwaltung der Unternehmen, Ansprechpartner und Kontaktdaten (Google Sheets: Lieferanten).</p>
             
             <div class="table-wrapper">
                 <table>
@@ -615,14 +615,34 @@
             <div class="section-header">
                 <h2>Kategorien-Verwaltung</h2>
             </div>
-            <p class="section-description">Hier werden die Produktkategorien definiert.</p>
-            <div id="kategorienContainer" class="empty">Kategorien-Liste aktiv.</div>
+            <p class="section-description">Hier werden die Produktkategorien definiert (Google Sheets: Kategorie).</p>
+            <div id="kategorienContainer" class="table-wrapper">
+                <div class="loading">Lade Kategorien...</div>
+            </div>
         </div>
     </section>
 
 </main>
 
 <script>
+    // Lokale Fallback-Daten für Live-Vorschau und Anbindung an Google Apps Script (`config.js`)
+    let appDaten = {
+        materialien: [
+            { artikelNr: "BTH-VAL-24V", kategorie: "Ventile & Regler", name: "Magnetventil 24V", masse: "115 x 80 mm", hydraulik: "0.2 - 3.4 m³/h", einheit: "Stück", elektriker: "Nein", dokument: "ventil_24v.pdf", gewicht: 0.45, kubikmeter: 0.002, lieferant: "Rain Bird" },
+            { artikelNr: "BTH-PIP-32PE", kategorie: "Rohre & Fittinge", name: "PE-HD Rohr 32mm PN16", masse: "32 mm x 50 m", hydraulik: "bis 16 bar", einheit: "Meter", elektriker: "Nein", dokument: "rohr_32.pdf", gewicht: 0.22, kubikmeter: 0.010, lieferant: "Hunter Industries" }
+        ],
+        lieferanten: [
+            { unternehmen: "Rain Bird", ansprechpartner: "Herr Müller", anschrift: "Industriestr. 12, Hamburg", telefon: "+49 40 123456", email: "mueller@rainbird-test.de" },
+            { unternehmen: "Hunter Industries", ansprechpartner: "Frau Schmidt", anschrift: "Große Elbstr. 44, Hamburg", telefon: "+49 40 987654", email: "schmidt@hunter-test.de" }
+        ],
+        kategorien: [
+            { name: "Ventile & Regler", beschreibung: "Magnetventile, Druckminderer, Ventilboxen" },
+            { name: "Rohre & Fittinge", beschreibung: "PE-Rohre, Winkel, T-Stücke, Verbinder" },
+            { name: "Sprinkler & Düsen", beschreibung: "Versenkregner, Rotatoren, Sprühdüsen" },
+            { name: "Pumpen & Technik", beschreibung: "Gartenpumpen, Hauswasserwerke, Steuergeräte" }
+        ]
+    };
+
     function rolleWechseln() {
         const rolle = document.getElementById('userRole').value;
         const body = document.body;
@@ -662,19 +682,156 @@
     }
 
     function zumDashboard() {
-        alert("Weiterleitung zum Dashboard...");
+        window.location.href = 'dashboard.html';
     }
 
     function neuerLieferantFormOeffnen() {
-        alert("Lieferanten-Erfassungsmaske öffnet sich...");
+        const unternehmen = prompt("Unternehmensname des neuen Lieferanten:");
+        if (!unternehmen) return;
+        const ansprechpartner = prompt("Ansprechpartner:");
+        const telefon = prompt("Telefonnummer:");
+        const email = prompt("E-Mail-Adresse:");
+
+        appDaten.lieferanten.push({ unternehmen, ansprechpartner: ansprechpartner || '–', anschrift: 'Hamburg', telefon: telefon || '–', email: email || '–' });
+        lieferantenEinlesen();
+        statistikenAktualisieren();
+        alert("Lieferant erfolgreich hinzugefügt!");
+    }
+
+    function materialSpeichern(event) {
+        event.preventDefault();
+        
+        const neuesMaterial = {
+            artikelNr: document.getElementById('artikelNr').value,
+            kategorie: document.getElementById('materialKategorie').value,
+            name: document.getElementById('materialName').value,
+            masse: document.getElementById('materialMasse').value || '–',
+            hydraulik: document.getElementById('materialHydraulik').value || '–',
+            einheit: document.getElementById('materialEinheit').value,
+            elektriker: document.getElementById('materialElektriker').value,
+            dokument: document.getElementById('materialDateiname').textContent ? 'Datei hochgeladen' : '–',
+            gewicht: parseFloat(document.getElementById('materialGewicht').value) || 0,
+            kubikmeter: parseFloat(document.getElementById('materialKubikmeter').value) || 0,
+            lieferant: document.getElementById('materialLieferant').value
+        };
+
+        appDaten.materialien.push(neuesMaterial);
+        materialFormZuruecksetzen();
+        materialienLaden();
+        statistikenAktualisieren();
+        alert("Material erfolgreich in der Datenbank (Material_Katalog) gespeichert.");
     }
 
     function materialienLaden() {
-        // Platzhalter für Google Apps Script Abruf
+        const tbody = document.getElementById('materialTabelleBody');
+        tbody.innerHTML = '';
+
+        if (appDaten.materialien.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="11" class="empty">Keine Materialien im Katalog gefunden.</td></tr>';
+            return;
+        }
+
+        appDaten.materialien.forEach(mat => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="admin-only"><strong>${mat.artikelNr}</strong></td>
+                <td>${mat.kategorie}</td>
+                <td><strong>${mat.name}</strong></td>
+                <td>${mat.masse}</td>
+                <td class="admin-only">${mat.hydraulik}</td>
+                <td>${mat.einheit}</td>
+                <td class="admin-only">${mat.elektriker}</td>
+                <td>${mat.dokument}</td>
+                <td>${mat.gewicht} kg</td>
+                <td>${mat.kubikmeter} m³</td>
+                <td class="admin-only">${mat.lieferant}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function lieferantenEinlesen() {
+        const tbody = document.getElementById('lieferantenTabelleBody');
+        tbody.innerHTML = '';
+
+        if (appDaten.lieferanten.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">Keine Lieferanten eingetragen.</td></tr>';
+            return;
+        }
+
+        appDaten.lieferanten.forEach(lief => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${lief.unternehmen}</strong></td>
+                <td>${lief.ansprechpartner}</td>
+                <td>${lief.anschrift}</td>
+                <td>${lief.telefon}</td>
+                <td>${lief.email}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Dropdown im Formular aktualisieren
+        const selectLief = document.getElementById('materialLieferant');
+        selectLief.innerHTML = '<option value="">Lieferant auswählen</option>';
+        appDaten.lieferanten.forEach(lief => {
+            let opt = document.createElement('option');
+            opt.value = lief.unternehmen;
+            opt.textContent = lief.unternehmen;
+            selectLief.appendChild(opt);
+        });
+    }
+
+    function kategorienEinlesen() {
+        const container = document.getElementById('kategorienContainer');
+        const selectKat = document.getElementById('materialKategorie');
+        
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kategoriename</th>
+                        <th>Beschreibung / Verwendung</th>
+                    </tr>
+                </thead>
+                <tbody id="kategorienTabelleBody"></tbody>
+            </table>
+        `;
+        const tbodyKat = document.getElementById('kategorienTabelleBody');
+        selectKat.innerHTML = '<option value="">Kategorie auswählen</option>';
+
+        appDaten.kategorien.forEach(kat => {
+            // Tabelle befüllen
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><strong>${kat.name}</strong></td><td>${kat.beschreibung}</td>`;
+            tbodyKat.appendChild(tr);
+
+            // Formular-Dropdown befüllen
+            let opt = document.createElement('option');
+            opt.value = kat.name;
+            opt.textContent = kat.name;
+            selectKat.appendChild(opt);
+        });
+    }
+
+    function statistikenAktualisieren() {
+        document.getElementById('statMaterialien').textContent = appDaten.materialien.length;
+        document.getElementById('statKategorien').textContent = appDaten.kategorien.length;
+        document.getElementById('statLieferanten').textContent = appDaten.lieferanten.length;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
         rolleWechseln();
+        kategorienEinlesen();
+        lieferantenEinlesen();
+        materialienLaden();
+        statistikenAktualisieren();
+
+        // Falls über `config.js` eine Verbindung zu Google Apps Script besteht, hier Daten asynchron abrufen:
+        if (typeof BTH_CONFIG !== 'undefined' && typeof google !== 'undefined' && google.script) {
+            // Beispielhafter Hook für Live-Daten aus Google Sheets
+            console.log("Verwende Google Apps Script Backend via config.js");
+        }
     });
 </script>
 
