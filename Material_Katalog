@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTH PLANWERK – Materialien & Katalog</title>
+
+    <!-- Zentrale BTH-Konfiguration -->
+    <script src="config.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #050b14;
+            --card-bg: #0f172a;
+            --card-bg-light: #111c31;
+            --border-color: #1e293b;
+            --accent-blue: #0284c7;
+            --cyan-glow: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+            --warning-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.97);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .logo-area h1 {
+            font-size: 1.1rem;
+            letter-spacing: 1.5px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .logo-area span {
+            font-size: 0.7rem;
+            color: var(--cyan-glow);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .role-switch {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .role-switch select {
+            background: transparent;
+            border: none;
+            color: var(--cyan-glow);
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            font-size: 0.8rem;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px 15px 40px;
+        }
+
+        /* NAVIGATION */
+        .material-navigation {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            flex: 1;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .nav-button:hover {
+            background: var(--border-color);
+            color: #fff;
+        }
+
+        .nav-button.active {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+
+        /* SECTIONS */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .section-header h2 {
+            font-size: 1.05rem;
+            color: #fff;
+        }
+
+        .section-description {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        /* BUTTONS */
+        .btn-primary {
+            background: var(--accent-blue);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: #fff;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        /* FORMS */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media(min-width: 768px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px 20px;
+            }
+            .btn-primary {
+                width: auto;
+            }
+        }
+
+        @media(min-width: 1200px) {
+            .form-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .form-group textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--cyan-glow);
+        }
+
+        .form-subheading {
+            grid-column: 1 / -1;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: var(--cyan-glow);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* STATS */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .stat-card-label {
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 4px;
+        }
+
+        /* TABLES */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 1000px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 11px 10px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            color: #fff;
+        }
+
+        tr:hover td {
+            background: rgba(56, 189, 248, 0.025);
+        }
+
+        /* ROLLE: PARTNER AUSBLENDUNGEN */
+        body.role-partner .admin-only {
+            display: none !important;
+        }
+
+        /* NOTICES & FILE UPLOAD */
+        .notice {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+
+        .notice-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning-amber);
+            color: var(--warning-amber);
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border-color);
+            padding: 15px;
+            text-align: center;
+            border-radius: 6px;
+            background: var(--bg-color);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .file-upload input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-name {
+            color: var(--cyan-glow);
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .loading, .empty {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 25px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body class="role-admin">
+
+<header>
+    <div class="logo-area">
+        <h1>BTH PLANWERK</h1>
+        <span>Material & Katalog</span>
+    </div>
+
+    <div class="header-right">
+        <div class="role-switch">
+            <span>Ansicht:</span>
+            <select id="userRole" onchange="rolleWechseln()">
+                <option value="admin">BTH Admin</option>
+                <option value="partner">Team / Partner</option>
+            </select>
+        </div>
+
+        <button class="btn-secondary" onclick="zumDashboard()">
+            ← Dashboard
+        </button>
+    </div>
+</header>
+
+<main>
+
+    <!-- NAVIGATION -->
+    <nav class="material-navigation">
+        <button class="nav-button active" onclick="bereichOeffnen('materialien', this)">📦 Materialien</button>
+        <button class="nav-button" onclick="bereichOeffnen('lieferanten', this)">🏢 Lieferanten</button>
+        <button class="nav-button" onclick="bereichOeffnen('kategorien', this)">🗂 Kategorien</button>
+    </nav>
+
+    <!-- =========================================================
+         MATERIALIEN SEKTION
+    ========================================================== -->
+    <section id="bereich-materialien" class="section active">
+
+        <div id="partnerNoticeMaterial" class="notice notice-warning admin-only" style="display:none;">
+            🔒 Partneransicht: Interne Artikelnummern, technische Hydraulikwerte und Lieferanteninformationen sind ausgeblendet.
+        </div>
+
+        <!-- STATISTIK -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-card-label">Materialien</div>
+                <div class="stat-card-value" id="statMaterialien">–</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Kategorien</div>
+                <div class="stat-card-value" id="statKategorien">–</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Lieferanten</div>
+                <div class="stat-card-value" id="statLieferanten">–</div>
+            </div>
+        </div>
+
+        <!-- NEUES MATERIAL ERFASSEN (ADMIN ONLY) -->
+        <div id="materialErfassung" class="section-box admin-only">
+            <div class="section-header">
+                <h2>Neues Material erfassen</h2>
+            </div>
+            <p class="section-description">
+                Erfassung direkt passend zur Google Sheets Struktur (Material_Katalog).
+            </p>
+
+            <form id="materialForm" onsubmit="materialSpeichern(event)">
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="artikelNr">Artikelnummer</label>
+                        <input type="text" id="artikelNr" required placeholder="z. B. BTH-VAL-24V">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialKategorie">Kategorie</label>
+                        <select id="materialKategorie" required>
+                            <option value="">Kategorie auswählen</option>
+                            <!-- Dynamisch via JS aus Sheets -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialName">Bezeichnung (Name)</label>
+                        <input type="text" id="materialName" required placeholder="z. B. Magnetventil 24V">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialMasse">Maße</label>
+                        <input type="text" id="materialMasse" placeholder="z. B. 115 x 80 mm">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialHydraulik">Hydraulik</label>
+                        <input type="text" id="materialHydraulik" placeholder="z. B. 0.2 - 3.4 m³/h / 2.5 bar">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialEinheit">Einheit</label>
+                        <select id="materialEinheit">
+                            <option value="Stück">Stück</option>
+                            <option value="Meter">Meter</option>
+                            <option value="Satz">Satz</option>
+                            <option value="Liter">Liter</option>
+                            <option value="kg">kg</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialElektriker">Elektriker erforderlich?</label>
+                        <select id="materialElektriker">
+                            <option value="Nein">Nein</option>
+                            <option value="Ja">Ja</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialGewicht">Gewicht (kg)</label>
+                        <input type="number" step="0.01" min="0" id="materialGewicht" placeholder="z. B. 1.45">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialKubikmeter">Rauminhalt (m³)</label>
+                        <input type="number" step="0.001" min="0" id="materialKubikmeter" placeholder="z. B. 0.015">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Bild / Explosionszeichnung</label>
+                        <div class="file-upload">
+                            <div>📁 Datei auswählen (Bild oder PDF)</div>
+                            <div id="materialDateiname" class="file-name"></div>
+                            <input type="file" id="materialBild" accept="image/*,.pdf" onchange="dateinameAnzeigen(this)">
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="materialLieferant">Lieferant (Zuordnung am Ende)</label>
+                        <select id="materialLieferant" required>
+                            <option value="">Lieferant auswählen</option>
+                            <!-- Dynamisch via JS aus Lieferanten-Tabelle -->
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Material in Datenbank speichern</button>
+                    <button type="button" class="btn-secondary" onclick="materialFormZuruecksetzen()">Zurücksetzen</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- MATERIALKATALOG TABELLE -->
+        <div class="section-box">
+            <div class="section-header">
+                <h2>Materialkatalog</h2>
+                <button class="btn-secondary" onclick="materialienLaden()">↻ Aktualisieren</button>
+            </div>
+            <p class="section-description">Übersicht aller verzeichneten Komponenten.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="admin-only">Artikelnummer</th>
+                            <th>Kategorie</th>
+                            <th>Name</th>
+                            <th>Maße</th>
+                            <th class="admin-only">Hydraulik</th>
+                            <th>Einheit</th>
+                            <th class="admin-only">Elektriker</th>
+                            <th>Dokument / Bild</th>
+                            <th>Gewicht</th>
+                            <th>m³</th>
+                            <th class="admin-only">Lieferant</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materialTabelleBody">
+                        <tr>
+                            <td colspan="11" class="loading">Lade Katalog-Daten...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- =========================================================
+         LIEFERANTEN SEKTION
+    ========================================================== -->
+    <section id="bereich-lieferanten" class="section">
+        <div class="section-box">
+            <div class="section-header">
+                <h2>Lieferanten-Stammdaten</h2>
+                <button class="btn-primary admin-only" onclick="neuerLieferantFormOeffnen()">+ Lieferant anlegen</button>
+            </div>
+            <p class="section-description">Verwaltung der Unternehmen, Ansprechpartner und Kontaktdaten.</p>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Unternehmensname</th>
+                            <th>Ansprechpartner</th>
+                            <th>Anschrift</th>
+                            <th>Telefonnummer</th>
+                            <th>E-Mail-Adresse</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lieferantenTabelleBody">
+                        <tr>
+                            <td colspan="5" class="loading">Lade Lieferanten...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         KATEGORIEN SEKTION
+    ========================================================== -->
+    <section id="bereich-kategorien" class="section">
+        <div class="section-box">
+            <div class="section-header">
+                <h2>Kategorien-Verwaltung</h2>
+            </div>
+            <p class="section-description">Hier werden die Produktkategorien definiert.</p>
+            <div id="kategorienContainer" class="empty">Kategorien-Liste aktiv.</div>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    // Rollen-Umschaltung für Admin vs. Partner Test
+    function rolleWechseln() {
+        const rolle = document.getElementById('userRole').value;
+        const body = document.body;
+        const noticeMat = document.getElementById('partnerNoticeMaterial');
+
+        if (rolle === 'partner') {
+            body.classList.remove('role-admin');
+            body.classList.add('role-partner');
+            if (noticeMat) noticeMat.style.display = 'block';
+        } else {
+            body.classList.remove('role-partner');
+            body.classList.add('role-admin');
+            if (noticeMat) noticeMat.style.display = 'none';
+        }
+    }
+
+    // Navigation zwischen Tabs
+    function bereichOeffnen(bereichsId, btn) {
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+
+        document.getElementById('bereich-' + bereichsId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function dateinameAnzeigen(input) {
+        const fileNameDiv = document.getElementById('materialDateiname');
+        if (input.files && input.files[0]) {
+            fileNameDiv.textContent = "Ausgewählt: " + input.files[0].name;
+        } else {
+            fileNameDiv.textContent = "";
+        }
+    }
+
+    function materialFormZuruecksetzen() {
+        document.getElementById('materialForm').reset();
+        document.getElementById('materialDateiname').textContent = "";
+    }
+
+    function zumDashboard() {
+        alert("Weiterleitung zum Dashboard...");
+    }
+
+    function neuerLieferantFormOeffnen() {
+        alert("Lieferanten-Erfassungsmaske öffnet sich...");
+    }
+
+    // Platzhalter für den späteren Apps Script / Backend Datenabruf
+    window.addEventListener('DOMContentLoaded', () => {
+        rolleWechseln();
+        // Hier werden später die Google Sheets Daten via google.script.run geladen
+    });
+</script>
+
+</body>
+</html>
