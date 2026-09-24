@@ -6,4 +6,4 @@ window.BTH_CONFIG = {
 };
 ```[cite: 3]
 
-Wenn du das einmal kurz in deiner `config.js` hinterlegst, kannst du in den einzelnen HTML-Dateien völlig frei sein – der Login und die anderen Seiten werden sofort wieder fehlerfrei anbinden!
+
