@@ -136,6 +136,33 @@
         .stat-value.blue { color: #38bdf8; }
         .stat-value.green { color: #4ade80; }
 
+        /* Quick Action Buttons Bar */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        .btn-action {
+            background-color: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-action:hover {
+            background-color: #0284c7;
+            border-color: #0284c7;
+        }
+
         /* Timeline */
         .timeline-item {
             position: relative;
@@ -168,13 +195,13 @@
         </div>
     </div>
 
-    <!-- Navigation Tabs (Alle bestehenden + Material-Reiter integriert) -->
     <!-- Navigation Tabs -->
     <ul class="nav-tabs">
-        <li><a href="dashboard.html">Übersicht & Historie</a></li>
+        <li class="active"><a href="dashboard.html">Übersicht & Historie</a></li>
         <li><a href="kunden-anlegen.html">Kunden anlegen</a></li>
         <li><a href="postfach.html">Postfach & Kundenliste</a></li>
-        <li><a href="materialien.html">Materialien</a></li> <!-- Hier verweist der Link auf deine separate Material-Seite -->
+        <li><a href="materialien.html">Materialien</a></li>
+        <li><a href="bestellung.html">Bestellung & Archiv</a></li>
         <li><a href="academy.html">Academy & Duell</a></li>
         <li><a href="ki-support.html">KI-Support & Assistenz</a></li>
         <li><a href="konto.html">Konto & PIN</a></li>
@@ -188,7 +215,7 @@
         <!-- Dashboard Kennzahlen -->
         <div class="card">
             <div class="card-title">📊 Dashboard Übersicht & System-Kennzahlen</div>
-            <div class="card-desc">Willkommen zurück. Hier siehst du die wichtigsten Live-Kennzahlen deiner laufenden Planungs- und Lizenzprojekte auf einen Blick.</div>
+            <div class="card-desc">Willkommen zurück, jul. Hier siehst du die wichtigsten Live-Kennzahlen deiner laufenden Planungs- und Lizenzprojekte auf einen Blick.</div>
             
             <div class="stats-grid">
                 <div class="stat-box">
@@ -203,6 +230,13 @@
                     <div class="stat-label">Erfolgreich Ausgeliefert</div>
                     <div class="stat-value green">18 Projekte</div>
                 </div>
+            </div>
+
+            <!-- Schnellstart-Leiste direkt im Dashboard -->
+            <div class="quick-actions">
+                <a href="materialien.html" class="btn-action">📦 Materialstamm öffnen</a>
+                <a href="bestellung.html" class="btn-action">🚀 Direktbestellung & CAD-Import</a>
+                <a href="bestellung.html" class="btn-action">📂 Bestell-Archiv & Wareneingang</a>
             </div>
         </div>
 
