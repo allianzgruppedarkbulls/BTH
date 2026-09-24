@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTH PLANWERK – Bestellung & Archiv</title>
+
+    <!-- Zentrale BTH-Konfiguration -->
+    <script src="config.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #050b14;
+            --card-bg: #0f172a;
+            --card-bg-light: #111c31;
+            --border-color: #1e293b;
+            --accent-blue: #0284c7;
+            --cyan-glow: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+            --warning-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.97);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .logo-area h1 {
+            font-size: 1.1rem;
+            letter-spacing: 1.5px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .logo-area span {
+            font-size: 0.7rem;
+            color: var(--cyan-glow);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px 15px 40px;
+        }
+
+        /* NAVIGATION TABS */
+        .nav-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            flex: 1;
+            text-align: center;
+            min-width: 130px;
+        }
+
+        .tab-btn:hover {
+            background: var(--border-color);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .section-header h2 {
+            font-size: 1.05rem;
+            color: #fff;
+        }
+
+        .section-description {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        /* BUTTONS */
+        .btn-primary {
+            background: var(--accent-blue);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: #fff;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        /* TABLES */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 800px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 11px 10px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            color: #fff;
+        }
+
+        tbody tr {
+            cursor: pointer;
+        }
+
+        tr:hover td {
+            background: rgba(56, 189, 248, 0.05);
+        }
+
+        /* BADGES */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning-amber); border: 1px solid var(--warning-amber); }
+        .badge-success { background: rgba(34, 197, 94, 0.15); color: var(--success-green); border: 1px solid var(--success-green); }
+        .badge-info { background: rgba(56, 189, 248, 0.15); color: var(--cyan-glow); border: 1px solid var(--cyan-glow); }
+
+        /* DETAIL ANSICHTEN (DOPPELKLICK) */
+        .detail-ansicht {
+            display: none;
+            background: var(--card-bg-light);
+            border: 1px solid var(--cyan-glow);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .form-group select, .form-group input {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .loading, .empty {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 25px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo-area">
+        <h1>BTH PLANWERK</h1>
+        <span>Bestellwesen & Projekte</span>
+    </div>
+    <div class="header-right">
+        <button class="btn-secondary" onclick="window.location.href='materialien.html'">
+            📦 Zu den Materialien
+        </button>
+    </div>
+</header>
+
+<main>
+
+    <!-- REITER-NAVIGATION -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="tabWechseln(1, this)">1. Direktbestellung</button>
+        <button class="tab-btn" onclick="tabWechseln(2, this)">2. Gartenplan-Import & Projekte</button>
+        <button class="tab-btn" onclick="tabWechseln(3, this)">3. Archiv & Wareneingang</button>
+    </div>
+
+    <!-- RUBRIK 1: DIREKTBESTELLUNG -->
+    <div id="rubrik1" class="tab-content active">
+        <div class="section-box">
+            <h2>Manuelle Direktbestellung</h2>
+            <p class="section-description">Wähle Artikel direkt aus dem Materialkatalog aus, um eine ad-hoc-Bestellung an einen Lieferanten auszulösen.</p>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Lieferant auswählen</label>
+                    <select id="direktLieferant">
+                        <option value="">Lade Lieferanten...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Artikel aus Katalog</label>
+                    <select id="direktArtikel">
+                        <option value="">Lade Materialien...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Menge</label>
+                    <input type="number" id="direktMenge" min="1" value="1">
+                </div>
+            </div>
+            <button class="btn-primary" onclick="direktBestellungHinzufuegen()">+ Zur Bestellliste hinzufügen</button>
+            
+            <div style="margin-top: 20px;" class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Art-Nr.</th>
+                            <th>Bezeichnung</th>
+                            <th>Menge</th>
+                            <th>Einheit</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="direktBestellTabelle">
+                        <tr><td colspan="5" class="empty">Noch keine Artikel zur Bestellung hinzugefügt.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button class="btn-primary" onclick="bestellungAbsenden()">🚀 Direktbestellung auslösen (E-Mail / PDF)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RUBRIK 2: GARTENPLAN-IMPORT & PROJEKTE -->
+    <div id="rubrik2" class="tab-content">
+        <div class="section-box">
+            <h2>Projekt- & Planungsübersicht</h2>
+            <p class="section-description">
+                Übersicht aller eingegangenen Projekt-Planungen. <strong>Doppelklick auf ein Projekt</strong> öffnet die Materialliste und Details.
+            </p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Projekt-ID & Name</th>
+                            <th>Kunde / Auftraggeber</th>
+                            <th>Quelle</th>
+                            <th>Status</th>
+                            <th>Bauvorhaben / Start</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projektTabelleBody">
+                        <tr ondblclick="projektOeffnen('PRJ-102', 'Altona Parkprojekt (BA 2)')">
+                            <td><strong>#PRJ-102</strong><br>Altona Parkprojekt (BA 2)</td>
+                            <td>Stadt Hamburg / Privat</td>
+                            <td>Eigener Gartenplan (CAD)</td>
+                            <td><span class="badge badge-warning">Bereit, aber nicht freigegeben</span></td>
+                            <td>Beginn: 10.10.2026</td>
+                        </tr>
+                        <tr ondblclick="projektOeffnen('PRJ-105', 'Wassergarten Blankenese')">
+                            <td><strong>#PRJ-105</strong><br>Wassergarten Blankenese</td>
+                            <td>Müller GaLaBau (Fremdliste)</td>
+                            <td>Eingelesene CSV / Partner</td>
+                            <td><span class="badge badge-success">Bereit und freigegeben</span></td>
+                            <td>Beginn: 01.10.2026</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- DETAILANSICHT BEI DOPPELKLICK -->
+            <div id="projektDetailContainer" class="detail-ansicht">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 id="detailTitel" style="margin: 0; color: var(--cyan-glow);">Projektdetails</h3>
+                    <button class="btn-secondary" onclick="projektSchliessen()">Schließen [X]</button>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Gartenplan-Daten und Artikelpositionen:</p>
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Menge</th>
+                                <th style="width: 80px;">Einheit</th>
+                                <th style="width: 130px;">Art-Nr.</th>
+                                <th>Bezeichnung</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTabelleBody">
+                            <tr>
+                                <td>12</td><td>Stk</td><td>MP-ROT-360</td><td>Hunter MP Rotator Düse 360°</td>
+                            </tr>
+                            <tr>
+                                <td>50</td><td>m</td><td>PE-25-PN16</td><td>HDPE Rohr 25mm PN16</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button class="btn-secondary" onclick="alert('Bestellung zwischengespeichert.')">Zwischenspeichern</button>
+                    <button class="btn-primary" onclick="bestellungAusProjektAusloesen()">🚀 Bestellung auslösen (Autom. Mail & PDF)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RUBRIK 3: ARCHIV & WARENEINGANG -->
+    <div id="rubrik3" class="tab-content">
+        <div class="section-box">
+            <h2>Archiv & Wareneingangs-Nachkontrolle</h2>
+            <p class="section-description">
+                Liste der bestellten Projekte. <strong>Doppelklick auf ein Projekt</strong> öffnet die Nachkontrolle mit Abhaktmöglichkeiten.
+            </p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 130px;">Bestell-ID</th>
+                            <th>Projekt / Bauvorhaben</th>
+                            <th>Lieferant / Partner</th>
+                            <th>Gesamtstatus Wareneingang</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archivProjektBody">
+                        <tr ondblclick="archivProjektOeffnen('BST-2026-042', 'Altona Parkprojekt (BA 2)')">
+                            <td><strong>#BST-2026-042</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">22.09.2026</span></td>
+                            <td>Altona Parkprojekt (BA 2)</td>
+                            <td>Großhandel Herr Meyer</td>
+                            <td><span class="badge badge-success">Vollständig da (100%)</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ARCHIV DETAILANSICHT BEI DOPPELKLICK -->
+            <div id="archivDetailContainer" class="detail-ansicht">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 id="archivDetailTitel" style="margin: 0; color: var(--cyan-glow);">Wareneingangs-Kontrolle</h3>
+                    <button class="btn-secondary" onclick="archivProjektSchliessen()">Schließen [X]</button>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Hake eingetroffene Positionen ab:</p>
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;">Menge</th>
+                                <th>Artikelbezeichnung</th>
+                                <th style="width: 160px; text-align:center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archivDetailBody">
+                            <tr>
+                                <td>12 Stk</td>
+                                <td>Hunter MP Rotator Düse 360°</td>
+                                <td style="text-align:center;">
+                                    <label style="cursor:pointer; color:var(--success-green); font-weight:bold; font-size:0.8rem;">
+                                        <input type="checkbox" checked onchange="wareneingangCheck(this)"> Angekommen
+                                    </label>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    let appDaten = {
+        materialien: [],
+        lieferanten: []
+    };
+
+    function tabWechseln(nr, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('rubrik' + nr).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // Grunddaten aus Backend laden, damit Dropdowns gefüllt werden
+    function datenLaden() {
+        const backendUrl = typeof BTH_CONFIG !== 'undefined' && BTH_CONFIG.webAppUrl ? BTH_CONFIG.webAppUrl : '';
+        if (!backendUrl) return;
+
+        fetch(backendUrl + '?action=ladeAlleDaten')
+            .then(res => res.json())
+            .then(data => {
+                appDaten.materialien = data.materialien || [];
+                appDaten.lieferanten = data.lieferanten || [];
+                dropdownsFuelle();
+            })
+            .catch(err => console.error("Fehler beim Laden der Bestelldaten:", err));
+    }
+
+    function dropdownsFuelle() {
+        const selLief = document.getElementById('direktLieferant');
+        selLief.innerHTML = '<option value="">Lieferant wählen...</option>';
+        appDaten.lieferanten.forEach(l => {
+            let opt = document.createElement('option');
+            opt.value = l.unternehmen;
+            opt.textContent = l.unternehmen;
+            selLief.appendChild(opt);
+        });
+
+        const selArt = document.getElementById('direktArtikel');
+        selArt.innerHTML = '<option value="">Artikel wählen...</option>';
+        appDaten.materialien.forEach(m => {
+            let opt = document.createElement('option');
+            opt.value = m.artikelNr;
+            opt.textContent = `${m.artikelNr} - ${m.name} (${m.einheit})`;
+            selArt.appendChild(opt);
+        });
+    }
+
+    let warenkorb = [];
+    function direktBestellungHinzufuegen() {
+        const artNr = document.getElementById('direktArtikel').value;
+        const menge = document.getElementById('direktMenge').value;
+        if (!artNr) { alert("Bitte Artikel auswählen."); return; }
+
+        const mat = appDaten.materialien.find(m => m.artikelNr === artNr);
+        if (!mat) return;
+
+        warenkorb.push({ ...mat, menge });
+        warenkorbTabelleAktualisieren();
+    }
+
+    function warenkorbTabelleAktualisieren() {
+        const tbody = document.getElementById('direktBestellTabelle');
+        if (warenkorb.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">Noch keine Artikel zur Bestellung hinzugefügt.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        warenkorb.forEach((item, index) => {
+            tbody.innerHTML += `
+                <td><strong>${item.artikelNr}</strong></td>
+                <td>${item.name}</td>
+                <td>${item.menge}</td>
+                <td>${item.einheit}</td>
+                <td><button class="btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="warenkorbEntfernen(${index})">Entfernen</button></td>
+            `;
+        });
+    }
+
+    function warenkorbEntfernen(index) {
+        warenkorb.splice(index, 1);
+        warenkorbTabelleAktualisieren();
+    }
+
+    function bestellungAbsenden() {
+        if (warenkorb.length === 0) { alert("Warenkorb ist leer."); return; }
+        alert("Direktbestellung wurde erfolgreich ausgelöst und E-Mail versendet!");
+        warenkorb = [];
+        warenkorbTabelleAktualisieren();
+    }
+
+    // Projekt & Archiv Logik
+    function projektOeffnen(id, name) {
+        document.getElementById('detailTitel').textContent = `Projektdetails: ${name} (${id})`;
+        document.getElementById('projektDetailContainer').style.display = 'block';
+    }
+    function projektSchliessen() {
+        document.getElementById('projektDetailContainer').style.display = 'none';
+    }
+    function bestellungAusProjektAusloesen() {
+        alert("Bestellung für dieses Projekt wurde ausgelöst, PDF im Drive gespeichert & E-Mail versendet!");
+    }
+
+    function archivProjektOeffnen(id, name) {
+        document.getElementById('archivDetailTitel').textContent = `Wareneingangs-Kontrolle: ${name} (${id})`;
+        document.getElementById('archivDetailContainer').style.display = 'block';
+    }
+    function archivProjektSchliessen() {
+        document.getElementById('archivDetailContainer').style.display = 'none';
+    }
+
+    function wareneingangCheck(checkbox) {
+        const lbl = checkbox.closest('label');
+        if (checkbox.checked) {
+            lbl.style.color = 'var(--success-green)';
+            lbl.innerHTML = '<input type="checkbox" checked onchange="wareneingangCheck(this)"> Angekommen';
+        } else {
+            lbl.style.color = 'var(--warning-amber)';
+            lbl.innerHTML = '<input type="checkbox" onchange="wareneingangCheck(this)"> Fehlt noch';
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        datenLaden();
+    });
+</script>
+
+</body>
+</html>
