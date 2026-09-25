@@ -1,9 +1,5 @@
-
 const CONFIG = {
-   
     SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxKqeywH3IUxTzIPCjYCyHKcXscPXATS2rLhLjr34t-GwFHA1gquokSMzmsF8mR7TxHwA/exec",
-    
-
     APP_NAME: "BTH PLANWERK",
     VERSION: "2.5.0",
     
@@ -16,7 +12,6 @@ const CONFIG = {
                 },
                 body: JSON.stringify({ action, ...payload })
             });
-            
             const result = await response.json();
             return result;
         } catch (error) {
@@ -24,4 +19,10 @@ const CONFIG = {
             return { success: false, error: error.message };
         }
     }
+};
+
+// Kompatibilitätsschicht für Skripte, die BTH_CONFIG erwarten:
+const BTH_CONFIG = {
+    webAppUrl: CONFIG.SCRIPT_URL,
+    scriptUrl: CONFIG.SCRIPT_URL
 };
