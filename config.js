@@ -1,5 +1,5 @@
 const CONFIG = {
-    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxbyVziKxsSpdvxQp3lckXUSM-H1RvTE5P5JjfROAyZ7xd0wdTTAl1H_iqn-DBzooMWmQ/exec",
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbx4U8UZgrbBtYPuTLXH8O21MeRYLj4GgLYQjceQdWKJC1awxR4TBypm28Clfl8Q2n-kJQ/exec",
     APP_NAME: "BTH PLANWERK",
     VERSION: "2.5.0",
     
