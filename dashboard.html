@@ -257,5 +257,24 @@
 
     </div>
 
+<script src="config.js"></script>
+
+<script>
+const loggedInUser = sessionStorage.getItem("bth_user");
+
+if (!loggedInUser) {
+window.location.href = "index.html";
+
+} else {
+document.querySelector('.user-tag').innerText = loggedInUser;
+}
+
+document.querySelector('.btn-logout').addEventListener('click', () => {
+sessionStorage.clear();
+window.location.href = "index.html";
+
+});
+
+</script>
 </body>
 </html>
