@@ -207,10 +207,13 @@
             };
 
             try {
-                var response = await fetch(BTH_CONFIG.SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify(payload)
-                });
+               var response = await fetch(BTH_CONFIG.SCRIPT_URL, {
+    method: "POST",
+    headers: {
+        "Content-Type": "text/plain;charset=utf-8" // <--- Das ist der Retter in der Not!
+    },
+    body: JSON.stringify(payload)
+});
                 var data = await response.json();
 
                 if (data.success) {
